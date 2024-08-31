@@ -1,7 +1,9 @@
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <string>
 #include <cctype>
+#include <map>
 
 using namespace std;
 // --------------------------- -----------------------//
@@ -14,13 +16,12 @@ struct Token {
 
 Token T, L;
 string code;
-int ligne = 1 , position = 0; 
-bool fin = false;
+int ligne = 1 , position = 0;
 
 enum TokenType {
     INCONNU,
     tok_eof,
-    tok_id,
+    tok_ident,
     tok_constante,
     tok_op,
     tok_plus,
@@ -55,43 +56,27 @@ enum TokenType {
     tok_for,
     tok_return,
     tok_int,
+    tok_do,
+    tok_recv,
+    tok_break,
+    tok_continue,
+    tok_send,
     tok_main
 };
 
-std::string tokenOperators[] = {
-    "+",
-    "-",
-    "*",
-    "/",
-    "%",
-    "==",
-    "!=",
-    "<",
-    ">",
-    "<=",
-    ">=",
-    "&&",
-    "||",
-    "!",
-    "&",
-    "|",
-    "=",
-    ",",
-    ";",
-    "(",
-    ")",
-    "{",
-    "}",
-    "[",
-    "]",
-    "%",
-    "if",
-    "else",
-    "while",
-    "for",
-    "return",
-    "int",
-    "main"
+map <string, TokenType > keywords = {
+    {"if", TokenType::tok_if},
+    {"else", TokenType::tok_else},
+    {"while", TokenType::tok_while},
+    {"return", TokenType::tok_return},
+    {"int", TokenType::tok_int},
+    {"main", TokenType::tok_main},
+    {"for", TokenType::tok_for},
+    {"do", TokenType::tok_do},
+    {"break", TokenType::tok_break},
+    {"continue", TokenType::tok_continue},
+    {"recv", TokenType::tok_recv},
+    {"send", TokenType::tok_send},
 };
 
 void next(){
@@ -118,9 +103,9 @@ int check (string type){
 
 
 void analex( string fname){
-    char temp;
+    char temp = NULL;
   // Lire le fichier et attribuer le code dans la variable code -------------
-    while (T.type != "tok_eof")
+    while (temp != '\0')
     {
         temp = code[position];
 
@@ -190,10 +175,30 @@ void analex( string fname){
         }else if (temp == ']'){
             T.type = TokenType::tok_close_bracket;
         }
-        else if (
+        else if (isdigit(temp)){
+            while(position < code.size() && isdigit(code[position])){
+                position++;
+            }
+            T.type  = TokenType::tok_constante;
+        }else {
+            string text;
+            while (position < code.size() && isspace(code[position]) == false )
+            {
+                text += temp;
+                position ++;
+            }
 
-        ){
-
+            bool patch = false;
+            for (const auto& entry : keywords) {
+                if(text == entry.first){
+                    T.type = entry.second;
+                    patch = true;
+                }
+            }
+             
+            if(patch == false ){
+                T.type = TokenType::tok_ident;
+            }
         }
 
     }
@@ -209,25 +214,23 @@ void accept(int type){
 
 
 
-void lireFichier(const std::string& nomFichier) {
-    std::ifstream fichier(nomFichier); // Ouvre le fichier en lecture
+std::string lireFichier(const std::string& cheminFichier) {
+    std::ifstream fichier(cheminFichier);  // Ouvrir le fichier en lecture
     if (!fichier.is_open()) {
-        std::cerr << "Erreur lors de l'ouverture du fichier." << std::endl;
-        return;
+        std::cerr << "Erreur : impossible d'ouvrir le fichier." << std::endl;
+        return "";
     }
 
-    std::string ligne;
-    while (std::getline(fichier, ligne)) {
-        std::cout << ligne << std::endl; // Affiche chaque ligne du fichier
-    }
+    std::stringstream buffer;
+    buffer << fichier.rdbuf();  // Lire le contenu du fichier dans le stringstream
 
-    fichier.close(); // Ferme le fichier
+    return buffer.str();  // Retourner le contenu sous forme de string
 }
 
 
 int main() {
     lireFichier("nom_du_fichier.txt");
-    return 0;S
+    return 0;
 }
 
 
@@ -237,19 +240,4 @@ struct Node{
     int valeur;
     int Nenfants;
     Node *enfants[];
-}
-
-
-Node *A(){
-    if (check(tok_constante)){
-    A = CreerNode(,L.valeur)
-    }
-    else if (check(tok_open_parenthesis)){
-        A=E(); 
-        accept(tok_close_parenthesis);
-        return A
-
-    }
-}
-
-Node *CreerNode(int type); 
+};
