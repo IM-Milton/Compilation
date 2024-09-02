@@ -7,16 +7,6 @@
 
 using namespace std;
 // --------------------------- -----------------------//
-struct Token {
-    TokenType type;
-    int ligne;
-    std::string valeur;
-};
-
-
-Token T, L;
-string code;
-int ligne = 1 , position = 0;
 
 enum TokenType {
     INCONNU,
@@ -64,6 +54,69 @@ enum TokenType {
     tok_main
 };
 
+std::string lireFichier(const std::string& cheminFichier) {
+    std::ifstream fichier(cheminFichier);  // Ouvrir le fichier en lecture
+    if (!fichier.is_open()) {
+        std::cerr << "Erreur : impossible d'ouvrir le fichier." << std::endl;
+        return "";
+    }
+
+    std::stringstream buffer;
+    buffer << fichier.rdbuf();  // Lire le contenu du fichier dans le stringstream
+
+    return buffer.str();  // Retourner le contenu sous forme de string
+}
+struct Token {
+private:
+    TokenType type;     
+    std::string valeur; 
+    int ligne;          
+
+public:
+    // Constructeur par défaut
+    Token() : type(TokenType::INCONNU), valeur(""), ligne(0) {}
+
+    // Constructeur pour initialiser un token avec des valeurs spécifiques
+    Token(TokenType t, const std::string& v, int l) : type(t), valeur(v), ligne(l) {}
+
+    // Getter pour le type du token
+    TokenType getType() const {
+        return type;
+    }
+
+    // Setter pour le type du token
+    void setType(TokenType t) {
+        type = t;
+    }
+
+    // Getter pour la valeur du token
+    std::string getValeur() const {
+        return valeur;
+    }
+
+    // Setter pour la valeur du token
+    void setValeur(const std::string& v) {
+        valeur = v;
+    }
+
+    // Getter pour le numéro de ligne
+    int getLigne() const {
+        return ligne;
+    }
+
+    // Setter pour le numéro de ligne
+    void setLigne(int l) {
+        ligne = l;
+    }
+};
+
+/* il reste à implementer la ligne*/
+Token T, L;
+string code = "";
+size_t ligne = 1 , position = 0;
+
+
+
 map <string, TokenType > keywords = {
     {"if", TokenType::tok_if},
     {"else", TokenType::tok_else},
@@ -80,7 +133,7 @@ map <string, TokenType > keywords = {
 };
 
 void next(){
-    for (int i = position; i < code.size(); i++){
+    for (size_t i = position; i < code.length(); i++){
         if( isspace(code[i])){
             continue;
         }
@@ -90,6 +143,7 @@ void next(){
     }
 }
 
+/*
 int check (string type){
     if(T.type != type){
         return false;
@@ -99,145 +153,166 @@ int check (string type){
         return true;
     }
 
-}
+}*/
 
 
 void analex( string fname){
-    char temp = NULL;
+    char temp;
   // Lire le fichier et attribuer le code dans la variable code -------------
+    code = lireFichier(fname);
+
     while (temp != '\0')
     {
         temp = code[position];
-
+        string s;
         if ( temp == '+'){
-            T.type = TokenType::tok_plus;
+            T.setType(TokenType::tok_plus);
+            s = string(1, temp);
         }else if (temp == '-'){
-            T.type = TokenType::tok_minus;
+            T.setType(TokenType::tok_minus);
+            s = string(1, temp);
         }else if (temp == '*'){
-            T.type = TokenType::tok_multiply;
+            T.setType(TokenType::tok_multiply);
+            s = string(1, temp);
         }else if (temp == '/'){
-            T.type = TokenType::tok_divide;
+            T.setLigne(TokenType::tok_divide);
+            s = string(1, temp);
         }else if (temp == '%'){
-            T.type = TokenType::tok_modulo;
+            T.setType(TokenType::tok_modulo);
+            s = string(1, temp);
         }else if (temp == '='){
             if (code[position+1] == '='){
-                T.type = TokenType::tok_equal;
+                T.setType(TokenType::tok_equal);
+                s = temp + "=";
                 position = position + 1;
             }else{
-                T.type = TokenType::tok_assignment;
+                T.setType(TokenType::tok_assignment);
+                s = string(1, temp);
             }
         }else if (temp == '!'){
             if (code[position+1] == '=')
             {
-                T.type = TokenType :: tok_not_equal;
+                T.setType(TokenType :: tok_not_equal);
+                s = temp + "=";
             }else{
-                T.type = TokenType::tok_logical_not;
+                T.setType(TokenType::tok_logical_not);
+                s = string(1, temp);
             }
         }else if (temp == '<'){
             if (code[position+1] == '=')
             {
-                T.type = TokenType :: tok_less_equal;
+                T.setType(TokenType :: tok_less_equal);
+                s = temp + "=";
             }else{
-                T.type = TokenType::tok_less_than;
+                T.setType(TokenType::tok_less_than);
+                s = string(1, temp);
             }
         }else if (temp == '>'){
             if(code[position+1] == '='){
-                T.type = TokenType :: tok_greater_equal;
+                T.setType(TokenType :: tok_greater_equal);
+                s = temp + "=";
             }else{
-                T.type = TokenType::tok_greater_than;
+                T.setType(TokenType::tok_greater_than);
+                s = string(1, temp);
             }
         }else if (temp == '&'){
             if (code[position+1] == '&'){
-                T.type = TokenType :: tok_logical_and;
+                T.setType(TokenType :: tok_logical_and);
+                s = temp + "&";
             }else{
-                T.type = TokenType::tok_bitwise_and;
+                T.setType(TokenType::tok_bitwise_and);
+                s = string(1, temp);
             }
         }else if (temp == '|'){
             if (code[position+1] == '|'){
-                T.type = TokenType :: tok_logical_or;
+                T.setType(TokenType :: tok_logical_or);
+                s = temp + "|";
             }else{
-                T.type = TokenType::tok_bitwise_or;
+                T.setType(TokenType::tok_bitwise_or);
+                s = string(1, temp);
             }
         }else if (temp == ','){
-            T.type = TokenType::tok_comma;
+            T.setType(TokenType::tok_comma);
+            s = string(1, temp);
         }else if (temp == ';'){
-            T.type = TokenType::tok_semicolon;
+            T.setType(TokenType::tok_semicolon);
+            s = string(1, temp);
         }else if (temp == '('){
-            T.type = TokenType::tok_open_parenthesis;
+            T.setType(TokenType::tok_open_parenthesis);
+            s = string(1, temp);
         }else if (temp == ')'){
-            T.type = TokenType::tok_close_parenthesis;
+            T.setType(TokenType::tok_close_parenthesis);
+            s = string(1, temp);
         }else if (temp == '{'){
-            T.type = TokenType::tok_open_brace;
+            T.setType(TokenType::tok_open_brace);
+            s = string(1, temp);
         }else if (temp == '}'){
-            T.type = TokenType::tok_close_brace;
+            T.setType(TokenType::tok_close_brace);
+            s = string(1, temp);
         }else if (temp == '['){
-            T.type = TokenType::tok_open_bracket;
+            T.setType(TokenType::tok_open_bracket);
+            s = string(1, temp);
         }else if (temp == ']'){
-            T.type = TokenType::tok_close_bracket;
+            T.setType(TokenType::tok_close_bracket);
+            s = string(1, temp);
         }
         else if (isdigit(temp)){
-            while(position < code.size() && isdigit(code[position])){
+            s = string(1, temp);
+            while(position < code.length() && isdigit(code[position])){
+                s = s + code[position];
                 position++;
             }
-            T.type  = TokenType::tok_constante;
+            T.setType(TokenType::tok_constante);
+        }else if(temp == '\0'){
+            T.setType(TokenType::tok_eof);
+            s = "\0";
         }else {
             string text;
-            while (position < code.size() && isspace(code[position]) == false )
+            while (position < code.length() && isspace(code[position]) == false )
             {
-                text += temp;
+                text += code[position];
                 position ++;
             }
+            s = text;
 
+            /*Verification si c'est un mot clés connu*/
             bool patch = false;
             for (const auto& entry : keywords) {
                 if(text == entry.first){
-                    T.type = entry.second;
+                    T.setType(entry.second);
                     patch = true;
                 }
             }
-             
+            
+            /*Cest un identifiant*/
             if(patch == false ){
-                T.type = TokenType::tok_ident;
+                T.setType(TokenType::tok_ident);
             }
         }
-
+        T.setValeur(s);
+        next();
     }
     
 }
-
+/*
 void accept(int type){
     if(T.type != type){
         std::cout<<"Erreur fatale"<<std::endl;
     }
     next();
-}
+}*/
 
-
-
-std::string lireFichier(const std::string& cheminFichier) {
-    std::ifstream fichier(cheminFichier);  // Ouvrir le fichier en lecture
-    if (!fichier.is_open()) {
-        std::cerr << "Erreur : impossible d'ouvrir le fichier." << std::endl;
-        return "";
-    }
-
-    std::stringstream buffer;
-    buffer << fichier.rdbuf();  // Lire le contenu du fichier dans le stringstream
-
-    return buffer.str();  // Retourner le contenu sous forme de string
-}
-
-
-int main() {
-    lireFichier("nom_du_fichier.txt");
+int main(int argc, char *argv[]) {
+    
+    code = lireFichier(argv[0]);
     return 0;
 }
 
 
-
+/*
 struct Node{
     int type;
     int valeur;
     int Nenfants;
     Node *enfants[];
-};
+};*/
