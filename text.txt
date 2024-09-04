@@ -1,0 +1,391 @@
+#include <iostream>
+
+int main() {
+    int a = 5;
+    int b = 10;
+    int sum = a + b;
+
+    std::cout << "La somme de " << a << " et " << b << " est : " << sum << std::endl;
+
+    return 0;
+}
+0
+ ICI
+0
+ ICI
+0
+ ICI
+0
+ ICI
+0
+ ICI
+0
+ ICI
+0
+ ICI
+0
+ ICI
+0
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+13
+ ICI
+13
+ ICI
+13
+ ICI
+13
+ ICI
+13
+ ICI
+13
+ ICI
+13
+ ICI
+13
+ ICI
+13
+ ICI
+13
+ ICI
+13
+ ICI
+24
+ ICI
+25
+ ICI
+25
+ ICI
+26
+ ICI
+26
+ ICI
+26
+ ICI
+26
+ ICI
+26
+ ICI
+26
+ ICI
+26
+ ICI
+26
+ ICI
+26
+ ICI
+26
+ ICI
+26
+ ICI
+26
+ ICI
+21
+ ICI
+21
+ ICI
+21
+ ICI
+23
+ ICI
+23
+ ICI
+23
+ ICI
+23
+ ICI
+23
+ ICI
+23
+ ICI
+23
+ ICI
+23
+ ICI
+23
+ ICI
+23
+ ICI
+23
+ ICI
+23
+ ICI
+21
+ ICI
+21
+ ICI
+21
+ ICI
+21
+ ICI
+23
+ ICI
+23
+ ICI
+23
+ ICI
+23
+ ICI
+23
+ ICI
+23
+ ICI
+23
+ ICI
+23
+ ICI
+23
+ ICI
+23
+ ICI
+23
+ ICI
+23
+ ICI
+23
+ ICI
+23
+ ICI
+21
+ ICI
+21
+ ICI
+21
+ ICI
+21
+ ICI
+5
+ ICI
+5
+ ICI
+5
+ ICI
+23
+ ICI
+23
+ ICI
+23
+ ICI
+23
+ ICI
+23
+ ICI
+23
+ ICI
+23
+ ICI
+23
+ ICI
+23
+ ICI
+23
+ ICI
+23
+ ICI
+23
+ ICI
+23
+ ICI
+23
+ ICI
+23
+ ICI
+23
+ ICI
+23
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+12
+ ICI
+23
+ ICI
+23
+ ICI
+23
+ ICI
+23
+ ICI
+23
+ ICI
+23
+ ICI
+23
+ ICI
+23
+ ICI
+23
+ ICI
+23
+ ICI
+23
+ ICI
+23
+ ICI
+23
+ ICI
+23
+ ICI
+23
+ ICI
+23
+ ICI
+23
+ ICI
+27
+ ICI
+27
+ ICI
