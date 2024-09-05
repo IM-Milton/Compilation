@@ -4,6 +4,8 @@
 #include <string>
 #include <cctype>
 #include <map>
+#include <stdexcept>
+#include <vector>
 
 using namespace std;
 // --------------------------- -----------------------//
@@ -72,10 +74,67 @@ struct Token {
     std::string valeur;
 };
 
+class S {
+public:
+    std::string nom;
+    std::string type_;
+    int position;
+    int nbVar;
+
+    // Constructeur
+    S(const std::string& nom) : nom(nom), type_(""), position(0), nbVar(0) {}
+};
+
 /* il reste à implementer la ligne*/
 Token T, L;
 string code = "";
 size_t ligne = 1 , position = 0;
+
+// Déclaration de la liste Vars et la variable globale nbVar
+std::vector<S> Vars;
+int nbVar = 0;
+
+// Fonction pour déclarer une variable
+S& declare(const std::string& nom) {
+    // Parcourt la liste des variables en sens inverse
+    for (int i = Vars.size() - 1; i >= 0; --i) {
+        if (Vars[i].nom == nom) {
+            throw std::runtime_error("Declaration dupliquee de la variable : " + nom);
+        } else if (Vars[i].nom == "---") {
+            break;
+        }
+    }
+
+    // Création d'une nouvelle instance de S et ajout à la liste Vars
+    Vars.push_back(S(nom));
+    return Vars.back();  // Retourne une référence à la dernière variable ajoutée
+}
+
+
+S& chercher(const std::string& nom) {
+    // Parcourt la liste des variables en sens inverse
+    for (int i = Vars.size() - 1; i >= 0; --i) {
+        if (Vars[i].nom == nom) {
+            return Vars[i];  // Retourne une référence à la variable trouvée
+        }
+    }
+    throw std::runtime_error("Variable non trouvée : " + nom);
+}
+
+// Fonction pour commencer un nouveau scope
+void begin() {
+    Vars.push_back(S("---"));  // Ajoute un marqueur de scope dans la liste Vars
+}
+
+// Fonction pour terminer le scope courant
+void end() {
+    while (!Vars.empty() && Vars.back().nom != "---") {
+        Vars.pop_back();  // Supprime les variables jusqu'au marqueur de scope
+    }
+    if (!Vars.empty()) {
+        Vars.pop_back();  // Supprime le marqueur de scope
+    }
+}
 
 
 
@@ -105,8 +164,8 @@ void next(){
     }
 }
 
-/*
-int check (string type){
+
+bool check (TokenType type){
     if(T.type != type){
         return false;
     }
@@ -115,7 +174,8 @@ int check (string type){
         return true;
     }
 
-}*/
+}
+
 
 
 void analex( string fname){
@@ -254,18 +314,17 @@ void analex( string fname){
             
         }
         T.valeur = s;
-        std :: cout << T.type << ", Valeur : " << T.valeur << ", Ligne : " << T.ligne << std::endl;
+        std :: cout << " le type : " << T.type << ", Valeur : " << T.valeur << ", Ligne : " << T.ligne << std::endl;
         next();
     }
     
 }
-/*
-void accept(int type){
-    if(T.type != type){
-        std::cout<<"Erreur fatale"<<std::endl;
+
+void accept(TokenType type){
+    if(check(type) == false){
+        throw std::runtime_error("Error Fatal : trouve "+ T.valeur);
     }
-    next();
-}*/
+}
 
 int main(int argc, char *argv[]) {
     
