@@ -8,7 +8,7 @@
 #include <vector>
 
 using namespace std;
-// --------------------------- -----------------------//
+// ---------------------------  -----------------------//
 
 enum TokenType {
     INCONNU,
@@ -57,22 +57,73 @@ enum TokenType {
 };
 
 std::string lireFichier(const std::string& cheminFichier) {
-    std::ifstream fichier(cheminFichier);  // Ouvrir le fichier en lecture
+    std::ifstream fichier(cheminFichier);
     if (!fichier.is_open()) {
         std::cerr << "Erreur : impossible d'ouvrir le fichier." << std::endl;
         return "";
     }
 
     std::stringstream buffer;
-    buffer << fichier.rdbuf();  // Lire le contenu du fichier dans le stringstream
+    buffer << fichier.rdbuf();  
 
-    return buffer.str();  // Retourner le contenu sous forme de string
+    return buffer.str(); 
 }
 struct Token {
     TokenType type;
     int ligne;
     std::string valeur;
 };
+
+
+struct Node {
+    int type;          // Type du noeud
+    int valeur;        // Valeur du noeud
+    int nEnfants;      // Nombre d'enfants
+    std::vector<Node*> enfants; // Vecteur dynamique pour les enfants du noeud
+};
+
+// Fonction pour créer un Node avec seulement le type
+Node* creerNode(int type) {
+    Node* nouveauNode = new Node;
+    nouveauNode->type = type;
+    nouveauNode->valeur = 0;
+    nouveauNode->nEnfants = 0;
+    return nouveauNode;
+}
+
+// Fonction pour créer un Node avec type et valeur
+Node* creerNode(int type, int valeur) {
+    Node* nouveauNode = new Node;
+    nouveauNode->type = type;
+    nouveauNode->valeur = valeur;
+    nouveauNode->nEnfants = 0;
+    return nouveauNode;
+}
+
+// Fonction pour ajouter un enfant à un Node
+void ajouterEnfant(Node* parent, Node* enfant) {
+    parent->enfants.push_back(enfant);
+    parent->nEnfants = parent->enfants.size();
+}
+
+// Fonction pour afficher les informations d'un noeud et de ses enfants
+void afficherNode(const Node* node, int niveau = 0) {
+    std::string indent(niveau * 2, ' ');  // Indentation pour affichage
+    std::cout << indent << "Node type: " << node->type << ", valeur: " << node->valeur << ", nombre d'enfants: " << node->nEnfants << std::endl;
+
+    // Afficher les enfants
+    for (const Node* enfant : node->enfants) {
+        afficherNode(enfant, niveau + 1);
+    }
+}
+
+
+void noeudA(){
+}
+
+void noeudE(){
+
+}
 
 class S {
 public:
@@ -81,22 +132,18 @@ public:
     int position;
     int nbVar;
 
-    // Constructeur
     S(const std::string& nom) : nom(nom), type_(""), position(0), nbVar(0) {}
 };
 
-/* il reste à implementer la ligne*/
 Token T, L;
 string code = "";
 size_t ligne = 1 , position = 0;
 
-// Déclaration de la liste Vars et la variable globale nbVar
+
 std::vector<S> Vars;
 int nbVar = 0;
 
-// Fonction pour déclarer une variable
 S& declare(const std::string& nom) {
-    // Parcourt la liste des variables en sens inverse
     for (int i = Vars.size() - 1; i >= 0; --i) {
         if (Vars[i].nom == nom) {
             throw std::runtime_error("Declaration dupliquee de la variable : " + nom);
@@ -105,34 +152,30 @@ S& declare(const std::string& nom) {
         }
     }
 
-    // Création d'une nouvelle instance de S et ajout à la liste Vars
     Vars.push_back(S(nom));
-    return Vars.back();  // Retourne une référence à la dernière variable ajoutée
+    return Vars.back();  
 }
 
 
 S& chercher(const std::string& nom) {
-    // Parcourt la liste des variables en sens inverse
     for (int i = Vars.size() - 1; i >= 0; --i) {
         if (Vars[i].nom == nom) {
-            return Vars[i];  // Retourne une référence à la variable trouvée
+            return Vars[i];
         }
     }
     throw std::runtime_error("Variable non trouvée : " + nom);
 }
 
-// Fonction pour commencer un nouveau scope
 void begin() {
-    Vars.push_back(S("---"));  // Ajoute un marqueur de scope dans la liste Vars
+    Vars.push_back(S("---"));  
 }
 
-// Fonction pour terminer le scope courant
 void end() {
     while (!Vars.empty() && Vars.back().nom != "---") {
-        Vars.pop_back();  // Supprime les variables jusqu'au marqueur de scope
+        Vars.pop_back();  
     }
     if (!Vars.empty()) {
-        Vars.pop_back();  // Supprime le marqueur de scope
+        Vars.pop_back();  
     }
 }
 
