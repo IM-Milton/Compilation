@@ -27,7 +27,7 @@ Node *A(){
         return A;
     }
     else if (check(tok_ident){
-        return CreerNod(nd_ref, L.valeur);
+        return CreerNode(nd_ref, L.valeur);
     })
     erreur();
 }
@@ -51,6 +51,16 @@ Node *I(){
         accept(tok_comma);
         return R;
 }
+    else if (check(tok_if)){
+        accept(tok_pronom);
+        Node *E= E();
+        accept(tok_closeparenthese);
+        Node *I1 = I();
+        if (check(tok_else)){
+            Node *I2 = I();
+            .....
+        }
+    }
     else{
         Node *R=E();
         accept(tok_comma);
@@ -78,7 +88,7 @@ Node E (int pmin){
         if (op==NULL||op.prio <pmin){
             return A1;
             }
-        nextt();
+        next();
         Node A2= E(op.prio+op.assoc);
         A1 = CreerNode(op.type,A1,A2)
     }
