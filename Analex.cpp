@@ -76,7 +76,7 @@ struct Token {
 
 
 struct Node {
-    int type;          // Type du noeud
+    const char  *type;          // Type du noeud
     int valeur;        // Valeur du noeud
     int nEnfants;      // Nombre d'enfants
     std::vector<Node*> enfants; // Vecteur dynamique pour les enfants du noeud
@@ -91,7 +91,7 @@ Node* creerNode(int type) {
     return nouveauNode;
 }
 
-// Fonction pour créer un Node avec type et valeur
+
 Node* creerNode(int type, int valeur) {
     Node* nouveauNode = new Node;
     nouveauNode->type = type;
@@ -100,15 +100,13 @@ Node* creerNode(int type, int valeur) {
     return nouveauNode;
 }
 
-// Fonction pour ajouter un enfant à un Node
 void ajouterEnfant(Node* parent, Node* enfant) {
     parent->enfants.push_back(enfant);
     parent->nEnfants = parent->enfants.size();
 }
 
-// Fonction pour afficher les informations d'un noeud et de ses enfants
 void afficherNode(const Node* node, int niveau = 0) {
-    std::string indent(niveau * 2, ' ');  // Indentation pour affichage
+    std::string indent(niveau * 2, ' ');  
     std::cout << indent << "Node type: " << node->type << ", valeur: " << node->valeur << ", nombre d'enfants: " << node->nEnfants << std::endl;
 
     // Afficher les enfants
@@ -218,8 +216,6 @@ bool check (TokenType type){
     }
 
 }
-
-
 
 void analex( string fname){
     char temp = ' ';
@@ -361,6 +357,53 @@ void analex( string fname){
         next();
     }
     
+}
+
+void gencode(Node *N){
+
+    if(Table[N->type]){
+        for (int i = 0; i < N->nEnfants; i++){
+            gencode(N->enfants[i]);
+        }
+        std :: cout << Table[N->type].code << std::endl;
+        return ;
+    }
+
+    switch (N->type)
+    {
+    case "nd_const":
+        /* code */
+        std :: cout << "push " << N -> valeur << std::endl;
+        break;
+    
+    case "nd_add":
+        /* code */
+        std :: cout << "add" << std::endl;
+        break;
+    case "nd_not":
+        /* code */
+        gencode(N->enfants[0]);
+        std :: cout << "not" << std::endl;
+        break;
+    case "nd_NdMoinsUn":
+        std :: cout << "push 0" << std::endl;
+        gencode(N->enfants[0]);
+        std :: cout << "sub" << std::endl;
+    case "nd_loop":
+        /* code */
+        int l = label++;
+        int tmp =  label_boucle;
+        label_boucles = l;
+        std :: cout << "l1_" << l << std::endl;
+
+        for(E = N->enfants[0]; E != NULL; E = E->frere){
+            gencode(E);
+        }
+        break;
+    default:
+        break;
+    }
+
 }
 
 void accept(TokenType type){
