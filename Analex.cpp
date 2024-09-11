@@ -12,6 +12,7 @@ using namespace std;
 
 enum TokenType {
     INCONNU,
+    tok_debug,
     tok_eof,
     tok_ident,
     tok_constante,
@@ -83,7 +84,7 @@ struct Node {
 };
 
 // Fonction pour créer un Node avec seulement le type
-Node* creerNode(int type) {
+Node* CreerNode(int type) {
     Node* nouveauNode = new Node;
     nouveauNode->type = type;
     nouveauNode->valeur = 0;
@@ -91,7 +92,7 @@ Node* creerNode(int type) {
     return nouveauNode;
 }
 
-
+// Fonction pour créer un Node avec type et valeur
 Node* creerNode(int type, int valeur) {
     Node* nouveauNode = new Node;
     nouveauNode->type = type;
@@ -100,28 +101,120 @@ Node* creerNode(int type, int valeur) {
     return nouveauNode;
 }
 
+// Fonction pour ajouter un enfant à un Node
 void ajouterEnfant(Node* parent, Node* enfant) {
     parent->enfants.push_back(enfant);
     parent->nEnfants = parent->enfants.size();
 }
 
+// Fonction pour afficher les informations d'un noeud et de ses enfants
 void afficherNode(const Node* node, int niveau = 0) {
-    std::string indent(niveau * 2, ' ');  
+    std::string indent(niveau * 2, ' ');  // Indentation pour affichage
     std::cout << indent << "Node type: " << node->type << ", valeur: " << node->valeur << ", nombre d'enfants: " << node->nEnfants << std::endl;
 
     // Afficher les enfants
     for (const Node* enfant : node->enfants) {
-        afficherNode(enfant, niveau + 1);
+        AfficherNode(enfant, niveau + 1);
     }
 }
 
 
-void noeudA(){
+Node *A(){
+    if (check(tok_constante)){
+        A = CreerNode(Nd_const,L.valeur);
+        return A;
+    }
+    else if (check(tok_open_parenthesis)){
+        A=E();
+        accept(tok_close_parenthesis);
+        return A;
+    }
+    else if (check(tok_ident){
+        return CreerNode(nd_ref, L.valeur);
+    })
+    erreur();
 }
 
-void noeudE(){
-
+Node *I(){
+    if(check(tok_debug)){
+        Node *R = E();
+        accept(tok_semicolon);
+        return CreerNode(nd_debug,R);
+    }
+    else if (check(tok_open_bracket)){
+        Node *R = CreerNode (nd_bloc);
+        while(!check(tok_close_bracket)){
+            AjouterEnfant(R,I());
+        }
+        return R;
+    }
+    else if (check(tok_int)) {
+        accept(tok_ident);
+        Node *R = CreerNode(nd_decl, L.valeur);
+        accept(tok_comma);
+        return R;
 }
+    else if (check(tok_if)){
+        accept(tok_open_parenthesis);
+        Node *E= E();
+        accept(tok_close_parenthesis);
+        Node *I1 = I();
+        if (check(tok_else)){
+            Node *I2 = I();
+            .....
+        }
+    }
+    else{
+        Node *R=E();
+        accept(tok_comma);
+        return CreerNode(nd_drop, R);
+    }
+}
+
+Node *P(){
+    if (check(tok_plus)){
+        A=P(); return A;
+    }
+    else if (check(tok_minus)){
+        A = P();
+        return CreerNode(NdMoinsUn,A);
+    }
+    else {
+        A = S(); return A;
+    }
+}
+
+struct Operateur {
+    std::string TokenType; 
+    int prio;             
+    int assoc;             
+    std::string NodeType;   
+};
+
+std::map<std::string, Operateur> operateurs = {
+    {tok_assignment,  {"=", 1, 1, "Assign"}},     {tok_logical_or, {"||", 2, 0, "LogicalOr"}},
+    {tok_logical_and, {"&&", 3, 0, "LogicalAnd"}}, {tok_equal, {"==", 4, 0, "Equal"}},
+    {tok_not_equal, {"!=", 4, 0, "NotEqual"}},  {tok_less_than,  {"<", 5, 0, "LessThan"}},
+    {tok_less_equal, {"<=", 5, 0, "LessEqual"}}, {tok_greater_than,  {">", 5, 0, "GreaterThan"}},
+    {tok_greater_equal, {">=", 5, 0, "GreaterEqual"}}, {tok_plus,  {"+", 6, 0, "Add"}},
+    {tok_minus,  {"-", 6, 0, "Subtract"}},   {tok_multiply,  {"*", 7, 0, "Multiply"}},
+    {tok_divide,  {"/", 7, 0, "Divide"}},     {tok_modulo,  {"%", 7, 0, "Modulo"}}
+};
+
+Node E (int pmin){
+    Node A1 = P();
+    while (T.type != tok_eof){
+        op = Table[T.type];
+        if (op==NULL||op.prio <pmin){
+            return A1;
+            }
+        next();
+        Node A2= E(op.prio+op.assoc);
+        A1 = CreerNode(op.type,A1,A2)
+    }
+}
+
+
 
 class S {
 public:
