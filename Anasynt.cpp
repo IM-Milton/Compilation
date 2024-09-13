@@ -159,6 +159,27 @@ AnaSem(N.enfants[i]);
 }
 end();
 return;
+case nd_appel:
+if (N.enfant[0].type != nd_ref){
+    Erreur();
 }
+Symb *S= find(N.enfant[0].ident);
+if (S.type != type_fonc)
+    Erreur():
+for(i = 1,i<N.nbEnfant){
+    AnaSem(N.enfant[i])
+}
+
+case nd_fonc:
+Symb *S = declare(N.ident);
+S.type = type_fonc;
+begin();
+nvar = 0;
+for (E = enfant){
+    AnaSem(E);
+}
+end();
+N.nvar = nvar - (N.nbEnfat -1)
+return;
 }
 voi

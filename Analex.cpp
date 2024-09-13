@@ -321,6 +321,23 @@ Node *E (int pmin){
     }
 }
 
+    Node *S(){
+        Node *R = A();
+        if( check(tok_open_parenthesis) ){
+            R = creerNode(nd_appel, R);
+            while( not check(tok_close_parenthesis)){
+                ajouterEnfant(R,E);
+                if(check(tok_close_parenthesis)){
+                    break;
+                }
+                else{
+                    accept(tok_comma);
+                }
+            }
+            return R;
+        }
+    }
+
 
 
 class S {
