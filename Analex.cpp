@@ -102,7 +102,8 @@ enum NodeType {
     nd_break,
     nd_continue,
     nd_send,
-    nd_main
+    nd_main,
+    nd_NdMoinsUn
 };
 
 std::map<NodeType, std::string> Tables = {
@@ -578,35 +579,35 @@ void analex( string fname){
 
 void gencode(Node *N){
 
-    if(Table[N->type]){
+    if(Tables.find(N->type) != Tables.end()){
         for (int i = 0; i < N->nEnfants; i++){
             gencode(N->enfants[i]);
         }
-        std :: cout << Table[N->type].code << std::endl;
+        std :: cout << Tables[N->type] << std::endl;
         return ;
     }
 
     switch (N->type)
     {
-    case "nd_const":
+    case nd_const:
         /* code */
         std :: cout << "push " << N -> valeur << std::endl;
         break;
     
-    case "nd_add":
+    case nd_add:
         /* code */
         std :: cout << "add" << std::endl;
         break;
-    case "nd_not":
+    case nd_not:
         /* code */
         gencode(N->enfants[0]);
         std :: cout << "not" << std::endl;
         break;
-    case "nd_NdMoinsUn":
+    case nd_NdMoinsUn:
         std :: cout << "push 0" << std::endl;
         gencode(N->enfants[0]);
         std :: cout << "sub" << std::endl;
-    case "nd_loop":
+    case nd_loop:
         /* code */
         int l = label++;
         int tmp =  label_boucle;
@@ -616,7 +617,20 @@ void gencode(Node *N){
         for(E = N->enfants[0]; E != NULL; E = E->frere){
             gencode(E);
         }
+        std :: cout << "jmpl l1_" << l << std::endl;
+        std :: cout << ".l2_" << l << std::endl;
         break;
+    case nd_if:
+        iflabel ++;
+        gencode(N->enfants[0]);
+        std :: cout << "jmpl l1_" << iflabel << std::endl;
+        gencode(N->enfants[1]);
+        if (N -> nEnfants > 2){
+            std :: cout << "jump l2_" << std::endl;
+            std :: cout << ".l1_" << iflabel << std::endl;
+            gencode(N->enfants[2]);
+            std :: cout << ".l2_" << iflabel << std::endl;
+        }
     default:
         break;
     }
