@@ -57,6 +57,102 @@ enum TokenType {
     tok_main
 };
 
+enum NodeType {
+    nd_const,
+    nd_ref,
+    nd_decl,
+    nd_debug,
+    nd_bloc,
+    nd_drop,
+    nd_loop,
+    nd_add,
+    nd_sub,
+    nd_mul,
+    nd_div,
+    nd_mod,
+    nd_eq,
+    nd_neq,
+    nd_lt,
+    nd_gt,
+    nd_le,
+    nd_ge,
+    nd_and,
+    nd_or,
+    nd_not,
+    nd_band,
+    nd_bor,
+    nd_assign,
+    nd_comma,
+    nd_semi,
+    nd_open_parenthesis,
+    nd_close_parenthesis,
+    nd_open_brace,
+    nd_close_brace,
+    nd_open_bracket,
+    nd_close_bracket,
+    nd_percent,
+    nd_if,
+    nd_else,
+    nd_while,
+    nd_for,
+    nd_return,
+    nd_int,
+    nd_do,
+    nd_recv,
+    nd_break,
+    nd_continue,
+    nd_send,
+    nd_main
+};
+
+std::map<NodeType, std::string> Tables = {
+    {nd_const, "nd_const"},
+    {nd_ref, "nd_ref"},
+    {nd_decl, "nd_decl"},
+    {nd_debug, "nd_debug"},
+    {nd_bloc, "nd_bloc"},
+    {nd_drop, "nd_drop"},
+    {nd_loop, "nd_loop"},
+    {nd_add, "nd_add"},
+    {nd_sub, "nd_sub"},
+    {nd_mul, "nd_mul"},
+    {nd_div, "nd_div"},
+    {nd_mod, "nd_mod"},
+    {nd_eq, "nd_eq"},
+    {nd_neq, "nd_neq"},
+    {nd_lt, "nd_lt"},
+    {nd_gt, "nd_gt"},
+    {nd_le, "nd_le"},
+    {nd_ge, "nd_ge"},
+    {nd_and, "nd_and"},
+    {nd_or, "nd_or"},
+    {nd_not, "nd_not"},
+    {nd_band, "nd_band"},
+    {nd_bor, "nd_bor"},
+    {nd_assign, "nd_assign"},
+    {nd_comma, "nd_comma"},
+    {nd_semi, "nd_semi"},
+    {nd_open_parenthesis, "nd_open_parenthesis"},
+    {nd_close_parenthesis, "nd_close_parenthesis"},
+    {nd_open_brace, "nd_open_brace"},
+    {nd_close_brace, "nd_close_brace"},
+    {nd_open_bracket, "nd_open_bracket"},
+    {nd_close_bracket, "nd_close_bracket"},
+    {nd_percent, "nd_percent"},
+    {nd_if, "nd_if"},
+    {nd_else, "nd_else"},
+    {nd_while, "nd_while"},
+    {nd_for, "nd_for"},
+    {nd_return, "nd_return"},
+    {nd_int, "nd_int"},
+    {nd_do, "nd_do"},
+    {nd_recv, "nd_recv"},
+    {nd_break, "nd_break"},
+    {nd_continue, "nd_continue"},
+    {nd_send, "nd_send"},
+    {nd_main, "nd_main"}
+}; 
+
 std::string lireFichier(const std::string& cheminFichier) {
     std::ifstream fichier(cheminFichier);
     if (!fichier.is_open()) {
@@ -77,23 +173,23 @@ struct Token {
 
 
 struct Node {
-    const char  *type;          // Type du noeud
-    int valeur;        // Valeur du noeud
+    NodeType type;          // Type du noeud
+    string valeur;        // Valeur du noeud
     int nEnfants;      // Nombre d'enfants
     std::vector<Node*> enfants; // Vecteur dynamique pour les enfants du noeud
 };
 
 // Fonction pour créer un Node avec seulement le type
-Node* CreerNode(int type) {
+Node* creerNode(NodeType type) {
     Node* nouveauNode = new Node;
     nouveauNode->type = type;
-    nouveauNode->valeur = 0;
+    nouveauNode->valeur = "";
     nouveauNode->nEnfants = 0;
     return nouveauNode;
 }
 
 // Fonction pour créer un Node avec type et valeur
-Node* creerNode(int type, int valeur) {
+Node* creerNode(NodeType type, string valeur) {
     Node* nouveauNode = new Node;
     nouveauNode->type = type;
     nouveauNode->valeur = valeur;
@@ -114,43 +210,46 @@ void afficherNode(const Node* node, int niveau = 0) {
 
     // Afficher les enfants
     for (const Node* enfant : node->enfants) {
-        AfficherNode(enfant, niveau + 1);
+        afficherNode(enfant, niveau + 1);
     }
 }
 
 
 Node *A(){
-    if (check(tok_constante)){
-        A = CreerNode(Nd_const,L.valeur);
+    if (check(TokenType :: tok_constante)){
+        Node *A = creerNode(NodeType :: nd_const, L.valeur);
         return A;
     }
-    else if (check(tok_open_parenthesis)){
-        A=E();
-        accept(tok_close_parenthesis);
+    else if (check(TokenType :: tok_open_parenthesis)){
+        Node *A = E(0);
+        accept(TokenType :: tok_close_parenthesis);
         return A;
     }
-    else if (check(tok_ident){
-        return CreerNode(nd_ref, L.valeur);
-    })
-    erreur();
+    else if (check( TokenType :: tok_ident)){
+        return creerNode(nd_ref, L.valeur);
+    }
+    else{    
+        erreur();
+    } 
 }
+
 
 Node *I(){
     if(check(tok_debug)){
         Node *R = E();
         accept(tok_semicolon);
-        return CreerNode(nd_debug,R);
+        return creerNode(nd_debug,R);
     }
     else if (check(tok_open_bracket)){
-        Node *R = CreerNode (nd_bloc);
+        Node *R = creerNode (nd_bloc);
         while(!check(tok_close_bracket)){
-            AjouterEnfant(R,I());
+            ajouterEnfant(R,I());
         }
         return R;
     }
     else if (check(tok_int)) {
         accept(tok_ident);
-        Node *R = CreerNode(nd_decl, L.valeur);
+        Node *R = creerNode(nd_decl, L.valeur);
         accept(tok_comma);
         return R;
 }
@@ -167,7 +266,7 @@ Node *I(){
     else{
         Node *R=E();
         accept(tok_comma);
-        return CreerNode(nd_drop, R);
+        return creerNode(nd_drop, R);
     }
 }
 
@@ -192,17 +291,25 @@ struct Operateur {
 };
 
 std::map<std::string, Operateur> operateurs = {
-    {tok_assignment,  {"=", 1, 1, "Assign"}},     {tok_logical_or, {"||", 2, 0, "LogicalOr"}},
-    {tok_logical_and, {"&&", 3, 0, "LogicalAnd"}}, {tok_equal, {"==", 4, 0, "Equal"}},
-    {tok_not_equal, {"!=", 4, 0, "NotEqual"}},  {tok_less_than,  {"<", 5, 0, "LessThan"}},
-    {tok_less_equal, {"<=", 5, 0, "LessEqual"}}, {tok_greater_than,  {">", 5, 0, "GreaterThan"}},
-    {tok_greater_equal, {">=", 5, 0, "GreaterEqual"}}, {tok_plus,  {"+", 6, 0, "Add"}},
-    {tok_minus,  {"-", 6, 0, "Subtract"}},   {tok_multiply,  {"*", 7, 0, "Multiply"}},
-    {tok_divide,  {"/", 7, 0, "Divide"}},     {tok_modulo,  {"%", 7, 0, "Modulo"}}
+    {"=", {"tok_assignment", 1, 1, "nd_assign"}},
+    {"||", {"tok_logical_or", 2, 0, "nd_or"}},
+    {"&&", {"tok_logical_and", 3, 0, "nd_and"}},
+    {"==", {"tok_equal", 4, 0, "nd_eq"}},
+    {"!=", {"tok_not_equal", 4, 0, "nd_neq"}},
+    {"<", {"tok_less_than", 5, 0, "nd_lt"}},
+    {">", {"tok_greater_than", 5, 0, "nd_gt"}},
+    {"<=", {"tok_less_equal", 5, 0, "nd_le"}},
+    {">=", {"tok_greater_equal", 5, 0, "nd_ge"}},
+    {"+", {"tok_plus", 6, 0, "nd_add"}},
+    {"-", {"tok_minus", 6, 0, "nd_sub"}},
+    {"*", {"tok_multiply", 7, 0, "nd_mul"}},
+    {"/", {"tok_divide", 7, 0, "nd_div"}},
+    {"%", {"tok_modulo", 7, 0, "nd_mod"}},
+    {"!", {"tok_logical_not", 8, 1, "nd_not"}},
 };
 
-Node E (int pmin){
-    Node A1 = P();
+Node *E (int pmin){
+    Node *A1 = P();
     while (T.type != tok_eof){
         op = Table[T.type];
         if (op==NULL||op.prio <pmin){
