@@ -283,9 +283,10 @@ Node *I(){
 }
     else if (check(tok_if)){
         accept(tok_open_parenthesis);
-        Node *E= E();
+        Node *expr= E();
         accept(tok_close_parenthesis);
         Node *I1 = I();
+
         if (check(tok_else)){
             Node *I2 = I();
             //.....
@@ -306,7 +307,15 @@ Node *P(){
     else if (check(tok_minus)){
         A = P();
         return creerNode(nd_NdMoinsUn,A);
-    }
+    }else if(check(tok_logical_not)){
+        A = P();
+        return creerNode(nd_not,A);
+    }else if(check(tok_bitwise_and)){
+        A = P();
+        return creerNode(nd_band,A);//A revoir
+    }else if(check(tok_multiply)){
+        A = P();
+        return creerNode(nd_mul,A);}
     else {
         A = S(); return A;
     }
@@ -416,8 +425,9 @@ Node *E (int pmin){
             return A1;
             }
         next();
-        Node A2= E(op.prio+op.assoc);
-        A1 = CreerNode(op.type,A1,A2)
+        Node *A2= E(op.prio+op.assoc);
+        A1 = creerNode(op.type,A1);
+        ajouterEnfant(A1,A2);
     }
     return A1;
 }
@@ -426,10 +436,10 @@ Node *S(){
         Node *R = A();
         if( check(tok_open_parenthesis) ){
             R = creerNode(nd_appel, R);
-            while( not check(tok_close_parenthesis)){
-                ajouterEnfant(R,E);
+            while( !check(tok_close_parenthesis)){
+                ajouterEnfant(R,E());
                 if(check(tok_close_parenthesis)){
-                    // break; statement removed
+                    break;
                 }
                 else{
                     accept(tok_comma);
