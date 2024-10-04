@@ -305,7 +305,7 @@ Node *P(){
     }
     else if (check(tok_minus)){
         A = P();
-        return creerNode(NdMoinsUn,A);
+        return creerNode(nd_NdMoinsUn,A);
     }
     else {
         A = S(); return A;
