@@ -305,7 +305,7 @@ Node *P(){
     }
     else if (check(tok_minus)){
         A = P();
-        return CreerNode(NdMoinsUn,A);
+        return creerNode(NdMoinsUn,A);
     }
     else {
         A = S(); return A;
@@ -416,8 +416,8 @@ Node *E (int pmin){
             return A1;
             }
         next();
-        Node *A2= E(op.prio + op.assoc);
-        A1 = creerNode(op.type,A1,A2);
+        Node A2= E(op.prio+op.assoc);
+        A1 = CreerNode(op.type,A1,A2)
     }
     return A1;
 }
