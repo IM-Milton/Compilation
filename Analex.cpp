@@ -198,6 +198,27 @@ Node* creerNode(NodeType type, string valeur) {
     return nouveauNode;
 }
 
+//fonction pour créer un Node avec un Node enfant
+Node* creerNode(NodeType type, Node* enfant) {
+    Node* nouveauNode = new Node;
+    nouveauNode->type = type;
+    nouveauNode->valeur = "";
+    nouveauNode->nEnfants = 1;
+    nouveauNode->enfants.push_back(enfant);
+    return nouveauNode;
+}
+
+Node* creerNode(NodeType type, Node* enfant1, Node* enfant2) {
+    Node* nouveauNode = new Node;
+    nouveauNode->type = type;
+    nouveauNode->valeur = "";
+    nouveauNode->nEnfants = 2;
+    nouveauNode->enfants.push_back(enfant1);
+    nouveauNode->enfants.push_back(enfant2);
+    return nouveauNode;
+}
+
+
 // Fonction pour ajouter un enfant à un Node
 void ajouterEnfant(Node* parent, Node* enfant) {
     parent->enfants.push_back(enfant);
@@ -277,7 +298,7 @@ Node *P(){
     }
     else if (check(tok_minus)){
         A = P();
-        return CreerNode(NdMoinsUn,A);
+        return creerNode(NdMoinsUn,A);
     }
     else {
         A = S(); return A;
