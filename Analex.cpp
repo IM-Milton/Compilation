@@ -103,7 +103,10 @@ enum NodeType {
     nd_continue,
     nd_send,
     nd_main,
-    nd_NdMoinsUn
+    nd_affect, // Added nd_affect
+    nd_appel,  // Added nd_appel
+    nd_NdMoinsUn,
+    nd_fonc // Added nd_fonc
 };
 
 std::map<NodeType, std::string> Tables = {
@@ -150,7 +153,8 @@ std::map<NodeType, std::string> Tables = {
     {nd_recv, "nd_recv"},
     {nd_break, "nd_break"},
     {nd_continue, "nd_continue"},
-    {nd_send, "nd_send"},
+    {nd_main, "nd_main"},
+    {nd_fonc, "nd_fonc"}, // Added nd_fonc to the map,
     {nd_main, "nd_main"}
 }; 
 
@@ -171,7 +175,6 @@ struct Token {
     int ligne;
     std::string valeur;
 };
-
 
 struct Node {
     NodeType type;          // Type du noeud
@@ -236,6 +239,9 @@ void afficherNode(const Node* node, int niveau = 0) {
     }
 }
 
+Node *E(){
+    return E(0);
+}
 
 Node *A(){
     if (check(TokenType :: tok_constante)){
@@ -251,7 +257,7 @@ Node *A(){
         return creerNode(nd_ref, L.valeur);
     }
     else{    
-        erreur();
+        throw std::runtime_error("Erreur : trouvé " + L.valeur);
     } 
 }
 
@@ -282,7 +288,7 @@ Node *I(){
         Node *I1 = I();
         if (check(tok_else)){
             Node *I2 = I();
-            .....
+            //.....
         }
     }
     else{
@@ -293,17 +299,89 @@ Node *I(){
 }
 
 Node *P(){
+    Node *A;
     if (check(tok_plus)){
-        A=P(); return A;
+        A = P(); return A;
     }
     else if (check(tok_minus)){
         A = P();
-        return creerNode(NdMoinsUn,A);
+        return CreerNode(NdMoinsUn,A);
     }
     else {
         A = S(); return A;
     }
 }
+
+Node *F(){
+
+}
+
+void erreurfatale(const std::string& message) {
+    throw std::runtime_error(message);
+}
+
+void AnaSem(Node *N) {
+    switch(N->type) {
+        default:
+            for(int i = 0; i < N->nEnfants; i++) {
+                AnaSem(N->enfants[i]);
+                throw std::runtime_error("Semantic error: invalid reference type.");
+            return;
+        case nd_affect:
+            if(N->enfants[0]->type != nd_ref) {
+                erreurfatale("...");
+            }
+            for(int i = 0; i < N->nEnfants; i++) {
+                AnaSem(N->enfants[i]);
+            }
+            return;
+        case nd_decl:
+            Symbol *S = declare(N->valeur);
+            S->type_ = "type_int";
+            S->position = nbVar; 
+            nbVar++;
+            return;
+        case nd_ref:
+            Symbol *S = chercher(N->valeur);
+            if(S->type_ != "type_int") {
+                erreurfatale("...");
+            }
+            N->position = S->position;
+            return;
+        case nd_bloc:
+            begin();
+            for(int i = 0; i < N->nEnfants; i++) {
+                AnaSem(N->enfants[i]);
+            }
+            end();
+            return;
+        case nd_appel:
+            if (N->enfants[0].type != nd_ref) {
+                erreurfatale(" ");
+            }
+            Symbol *S = chercher(N->enfants[0].ident);
+            if (S->type_ != "type_fonc") {
+                erreurfatale("");
+            }
+            for(int i = 1; i < N->nEnfants; i++) {
+                AnaSem(N->enfants[i]);
+            }
+            return;
+        case nd_fonc:
+            Symbol *S = declare(N->ident);
+            S->type_ = "type_fonc";
+            begin();
+            nbVar = 0;
+            for (int i = 0; i < N->nEnfants; i++) {
+                AnaSem(N->enfants[i]);
+            }
+            end();
+            N->nbVar = nbVar - (N->nEnfants - 1);
+            return;
+    }
+}
+}
+
 
 struct Operateur {
     std::string TokenType; 
@@ -333,24 +411,25 @@ std::map<std::string, Operateur> operateurs = {
 Node *E (int pmin){
     Node *A1 = P();
     while (T.type != tok_eof){
-        op = Table[T.type];
-        if (op==NULL||op.prio <pmin){
+        op = Tables[T.type];
+        if (op == NULL || op.prio <pmin){
             return A1;
             }
         next();
-        Node A2= E(op.prio+op.assoc);
-        A1 = CreerNode(op.type,A1,A2)
+        Node *A2= E(op.prio + op.assoc);
+        A1 = creerNode(op.type,A1,A2);
     }
+    return A1;
 }
 
-    Node *S(){
+Node *S(){
         Node *R = A();
         if( check(tok_open_parenthesis) ){
             R = creerNode(nd_appel, R);
             while( not check(tok_close_parenthesis)){
                 ajouterEnfant(R,E);
                 if(check(tok_close_parenthesis)){
-                    break;
+                    // break; statement removed
                 }
                 else{
                     accept(tok_comma);
@@ -358,29 +437,26 @@ Node *E (int pmin){
             }
             return R;
         }
-    }
+  }
 
+Token T, L;
+string code = "";
+size_t ligne = 1 , position = 0;
 
-
-class S {
+class Symbol {
 public:
     std::string nom;
     std::string type_;
     int position;
     int nbVar;
 
-    S(const std::string& nom) : nom(nom), type_(""), position(0), nbVar(0) {}
+    Symbol(const std::string& nom) : nom(nom), type_(""), position(0), nbVar(0) {}
 };
 
-Token T, L;
-string code = "";
-size_t ligne = 1 , position = 0;
-
-
-std::vector<S> Vars;
+std::vector<Symbol> Vars;
 int nbVar = 0;
 
-S& declare(const std::string& nom) {
+Symbol* declare(const std::string& nom) {
     for (int i = Vars.size() - 1; i >= 0; --i) {
         if (Vars[i].nom == nom) {
             throw std::runtime_error("Declaration dupliquee de la variable : " + nom);
@@ -389,22 +465,22 @@ S& declare(const std::string& nom) {
         }
     }
 
-    Vars.push_back(S(nom));
-    return Vars.back();  
+    Vars.push_back(Symbol(nom));
+    return &Vars.back();  
 }
 
 
-S& chercher(const std::string& nom) {
+Symbol* chercher(const std::string& nom) {
     for (int i = Vars.size() - 1; i >= 0; --i) {
         if (Vars[i].nom == nom) {
-            return Vars[i];
+            return &Vars[i];
         }
     }
     throw std::runtime_error("Variable non trouvée : " + nom);
 }
 
 void begin() {
-    Vars.push_back(S("---"));  
+    Vars.push_back(Symbol("---"));  
 }
 
 void end() {
@@ -415,8 +491,6 @@ void end() {
         Vars.pop_back();  
     }
 }
-
-
 
 map <string, TokenType > keywords = {
     {"if", TokenType::tok_if},
@@ -587,9 +661,7 @@ void analex( string fname){
             /*Cest un identifiant*/
             if(patch == false ){
                 T.type = TokenType::tok_ident;
-            }
-
-            
+            }  
         }
         T.valeur = s;
         std :: cout << " le type : " << T.type << ", Valeur : " << T.valeur << ", Ligne : " << T.ligne << std::endl;
@@ -666,6 +738,15 @@ void accept(TokenType type){
 
 int main(int argc, char *argv[]) {
     
+    std :: cout << ".start" << std::endl;
+    for (int i = 1; i < argc; i++){
+        analex(argv[i]);
+        while (T.type != tok_eof)
+        {
+            
+        }
+        
+    }
     analex(argv[1]);
     return 0;
 }
