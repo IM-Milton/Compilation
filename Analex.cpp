@@ -390,8 +390,6 @@ void AnaSem(Node *N) {
     }
 }
 }
-
-
 struct Operateur {
     std::string TokenType; 
     int prio;             
