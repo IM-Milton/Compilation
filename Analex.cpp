@@ -103,10 +103,17 @@ enum NodeType {
     nd_continue,
     nd_send,
     nd_main,
+    nd_cond,   // Added nd_cond
+    nd_vide,   // Added nd_vide
     nd_affect, // Added nd_affect
     nd_appel,  // Added nd_appel
     nd_NdMoinsUn,
-    nd_fonc // Added nd_fonc
+    nd_fonc, // Added nd_fonc
+    nd_eof,   // Added nd_eof
+    nd_adr,   // Added nd_adr
+    nd_ind,    // Added nd_ind
+    nd_ancre,   // Added nd_ancre
+    nd_indirect // Added nd_indirect
 };
 
 std::map<NodeType, std::string> Tables = {
@@ -177,9 +184,11 @@ struct Token {
 };
 
 struct Node {
-    NodeType type;          // Type du noeud
-    string valeur;        // Valeur du noeud
-    int nEnfants;      // Nombre d'enfants
+    NodeType type;          
+    string valeur;        
+    int nEnfants;
+    int position;
+    int nbVar;
     std::vector<Node*> enfants; // Vecteur dynamique pour les enfants du noeud
 };
 
@@ -189,6 +198,18 @@ Node* creerNode(NodeType type) {
     nouveauNode->type = type;
     nouveauNode->valeur = "";
     nouveauNode->nEnfants = 0;
+    return nouveauNode;
+}
+
+// Function to create a Node with four child nodes
+Node* creerNode(NodeType type, Node* enfant1, Node* enfant2, Node* enfant3) {
+    Node* nouveauNode = new Node;
+    nouveauNode->type = type;
+    nouveauNode->valeur = "";
+    nouveauNode->nEnfants = 3;
+    nouveauNode->enfants.push_back(enfant1);
+    nouveauNode->enfants.push_back(enfant2);
+    nouveauNode->enfants.push_back(enfant3);
     return nouveauNode;
 }
 
@@ -256,6 +277,12 @@ Node *A(){
     else if (check( TokenType :: tok_ident)){
         return creerNode(nd_ref, L.valeur);
     }
+    else if(check(tok_eof)){
+        return creerNode(nd_eof);
+    }
+    else if(T.type == tok_semicolon){
+        return creerNode(nd_vide);
+    }
     else{    
         throw std::runtime_error("Erreur : trouvé " + L.valeur);
     } 
@@ -280,17 +307,82 @@ Node *I(){
         Node *R = creerNode(nd_decl, L.valeur);
         accept(tok_comma);
         return R;
-}
+    }
     else if (check(tok_if)){
         accept(tok_open_parenthesis);
         Node *expr= E();
         accept(tok_close_parenthesis);
         Node *I1 = I();
+        Node *R = creerNode(nd_cond, expr, I1);
 
         if (check(tok_else)){
             Node *I2 = I();
-            //.....
+            ajouterEnfant(R, I2);
         }
+        return R;
+
+    }else if(check(tok_while)){
+        accept(tok_open_parenthesis);
+        Node *expr = E();
+        accept(tok_close_parenthesis);
+        Node *I1 = I();
+        Node *brek = creerNode(nd_break);
+        Node *R = creerNode(nd_cond, expr, I1, brek);
+        Node *ancre = creerNode(nd_ancre);
+        Node *loop = creerNode(nd_loop, ancre, R);
+
+        return loop;
+    }else if(check(tok_for)){
+        accept(tok_open_parenthesis);
+        Node *A1 = E();
+        accept(tok_semicolon);
+        Node *A2 = E();
+        accept(tok_semicolon);
+        Node *A3 = E();
+        accept(tok_close_parenthesis);
+        Node *I1 = I();
+        Node *brek = creerNode(nd_break);
+        Node *R = creerNode(nd_cond, A2, I1, brek);
+        Node *ancre = creerNode(nd_ancre);
+        Node *loop = creerNode(nd_loop, ancre, R, A3);
+        return creerNode(nd_bloc, A1, loop);
+    }else if(check(tok_do)){
+        Node *I1 = I();
+        accept(tok_while);
+        accept(tok_open_parenthesis);
+        Node *expr = E();
+        accept(tok_close_parenthesis);
+        accept(tok_semicolon);
+        Node *notexpr = creerNode(nd_not, expr);
+        Node *brek = creerNode(nd_break);
+        Node *R = creerNode(nd_cond, notexpr, I1, brek);
+        Node *ancre = creerNode(nd_ancre);
+        Node *loop = creerNode(nd_loop, ancre, R);
+        return loop;
+    }
+    else if(check(tok_return)){
+        Node *R = E();
+        accept(tok_semicolon);
+        return creerNode(nd_return, R);
+    }
+    else if(check(tok_break)){
+        accept(tok_semicolon);
+        return creerNode(nd_break);
+    }
+    else if(check(tok_continue)){
+        accept(tok_semicolon);
+        return creerNode(nd_continue);
+    }
+    else if(check(tok_send)){
+        Node *R = E();
+        accept(tok_semicolon);
+        return creerNode(nd_send, R);
+    }
+    else if(check(tok_recv)){
+        Node *R = E();
+        accept(tok_semicolon);
+        return creerNode(nd_recv, R);
+
     }
     else{
         Node *R=E();
@@ -301,6 +393,7 @@ Node *I(){
 
 Node *P(){
     Node *A;
+    /*A revoir apres ajout des nouveaux champs*/
     if (check(tok_plus)){
         A = P(); return A;
     }
@@ -322,11 +415,32 @@ Node *P(){
 }
 
 Node *F(){
-
+    accept(tok_int);
+    accept(tok_ident);
+    Node *R = creerNode(nd_fonc, L.valeur);
+    accept(tok_open_parenthesis);
+    while(check(tok_int)){
+        accept(tok_ident);
+        ajouterEnfant(R,creerNode(nd_decl, L.valeur));
+        if(check(tok_comma)){
+            continue;
+        }
+        else{
+            break;
+        }
+    }
+    accept(tok_close_parenthesis);
+    Node* i = I();
+    ajouterEnfant(R,i);
+    return R;
 }
 
 void erreurfatale(const std::string& message) {
     throw std::runtime_error(message);
+}
+
+Node* analyseursynthax(){
+    return F();
 }
 
 void AnaSem(Node *N) {
@@ -337,7 +451,7 @@ void AnaSem(Node *N) {
                 throw std::runtime_error("Semantic error: invalid reference type.");
             return;
         case nd_affect:
-            if(N->enfants[0]->type != nd_ref) {
+            if(N->enfants[0]->type != nd_ref && N -> enfants[0] -> type != nd_ind) {
                 erreurfatale("...");
             }
             for(int i = 0; i < N->nEnfants; i++) {
@@ -365,10 +479,10 @@ void AnaSem(Node *N) {
             end();
             return;
         case nd_appel:
-            if (N->enfants[0].type != nd_ref) {
+            if (N->enfants[0]-> type != nd_ref) {
                 erreurfatale(" ");
             }
-            Symbol *S = chercher(N->enfants[0].ident);
+            Symbol *S = chercher(N->enfants[0]->valeur);
             if (S->type_ != "type_fonc") {
                 erreurfatale("");
             }
@@ -377,7 +491,7 @@ void AnaSem(Node *N) {
             }
             return;
         case nd_fonc:
-            Symbol *S = declare(N->ident);
+            Symbol *S = declare(N->valeur);
             S->type_ = "type_fonc";
             begin();
             nbVar = 0;
@@ -387,64 +501,82 @@ void AnaSem(Node *N) {
             end();
             N->nbVar = nbVar - (N->nEnfants - 1);
             return;
+        case nd_adr:
+            if(N -> enfants[0]->type != nd_ref)
+		        erreurfatale(" ");
+	        else {
+		        return AnaSem(N-> enfants[0]);
+	        }
     }
 }
 }
 struct Operateur {
-    std::string TokenType; 
+    TokenType TokenType; 
     int prio;             
     int assoc;             
-    std::string NodeType;   
+    NodeType NodeType;   
 };
 
-std::map<std::string, Operateur> operateurs = {
-    {"=", {"tok_assignment", 1, 1, "nd_assign"}},
-    {"||", {"tok_logical_or", 2, 0, "nd_or"}},
-    {"&&", {"tok_logical_and", 3, 0, "nd_and"}},
-    {"==", {"tok_equal", 4, 0, "nd_eq"}},
-    {"!=", {"tok_not_equal", 4, 0, "nd_neq"}},
-    {"<", {"tok_less_than", 5, 0, "nd_lt"}},
-    {">", {"tok_greater_than", 5, 0, "nd_gt"}},
-    {"<=", {"tok_less_equal", 5, 0, "nd_le"}},
-    {">=", {"tok_greater_equal", 5, 0, "nd_ge"}},
-    {"+", {"tok_plus", 6, 0, "nd_add"}},
-    {"-", {"tok_minus", 6, 0, "nd_sub"}},
-    {"*", {"tok_multiply", 7, 0, "nd_mul"}},
-    {"/", {"tok_divide", 7, 0, "nd_div"}},
-    {"%", {"tok_modulo", 7, 0, "nd_mod"}},
-    {"!", {"tok_logical_not", 8, 1, "nd_not"}},
+std::vector<Operateur> operateurs = {
+    {tok_assignment, 1, 1, nd_assign},
+     {tok_logical_or, 2, 0, nd_or},
+     {tok_logical_and, 3, 0, nd_and},
+     {tok_equal, 4, 0, nd_eq},
+     {tok_not_equal, 4, 0, nd_neq},
+    {tok_less_than, 5, 0, nd_lt},
+    {tok_greater_than, 5, 0, nd_gt},
+     {tok_less_equal, 5, 0, nd_le},
+     {tok_greater_equal, 5, 0, nd_ge},
+    {tok_plus, 6, 0, nd_add},
+    {tok_minus, 6, 0, nd_sub},
+    {tok_multiply, 7, 0, nd_mul},
+    {tok_divide, 7, 0, nd_div},
+    {tok_modulo, 7, 0, nd_mod},
+    {tok_logical_not, 8, 1, nd_not},
 };
+
+
 
 Node *E (int pmin){
     Node *A1 = P();
     while (T.type != tok_eof){
-        op = Tables[T.type];
-        if (op == NULL || op.prio <pmin){
-            return A1;
+        const Operateur *op = nullptr;
+        for(const auto& op_ : operateurs){
+            if (op_.TokenType == T.type){
+                op = &op_;
+                break;
             }
+        }
+        if (op == nullptr || op->prio < pmin){
+            return A1;
+        }
         next();
-        Node *A2= E(op.prio+op.assoc);
-        A1 = creerNode(op.type,A1);
-        ajouterEnfant(A1,A2);
+        Node *A2= E(op->prio + op->assoc);
+        A1 = creerNode(op->NodeType, A1, A2);
     }
     return A1;
 }
 
 Node *S(){
-        Node *R = A();
-        if( check(tok_open_parenthesis) ){
-            R = creerNode(nd_appel, R);
-            while( !check(tok_close_parenthesis)){
-                ajouterEnfant(R,E());
-                if(check(tok_close_parenthesis)){
-                    break;
-                }
-                else{
-                    accept(tok_comma);
-                }
+    Node *N = A();
+    if (check(tok_open_parenthesis)) {
+        N = creerNode(nd_appel, N);
+        while (!check(tok_close_parenthesis)) {
+            ajouterEnfant(N, E(0));
+            if (check(tok_close_parenthesis)) {
+                break;
+            } else {
+                accept(tok_comma);
             }
-            return R;
         }
+        return N;
+    } else if (check(tok_open_bracket)) {
+        Node *e = E(0);
+        accept(tok_close_bracket);
+        Node *I = creerNode(nd_indirect, e);
+        return I;
+    }
+    return N;        
   }
 
 Token T, L;
@@ -650,7 +782,7 @@ void analex( string fname){
             s = "\0";
         }else {
             string text;
-            while (position < code.length() && isspace(code[position]) == false )
+            while (position < code.length() && isalnum(code[position]))
             {
                 text += code[position];
                 position ++;
@@ -677,6 +809,13 @@ void analex( string fname){
     }
     
 }
+
+
+
+int nblabel = 0;
+int lbl_continue = 0;
+int lbl_break = 0;
+int iflabel = 0;
 
 void gencode(Node *N){
 
@@ -710,16 +849,20 @@ void gencode(Node *N){
         std :: cout << "sub" << std::endl;
     case nd_loop:
         /* code */
-        int l = label++;
-        int tmp =  label_boucle;
-        label_boucles = l;
-        std :: cout << "l1_" << l << std::endl;
+        int lbl_debut = nblabel++;
+        int save_lbl_continue = nblabel++;
+        lbl_continue = save_lbl_continue;
+        int save_lbl_break = nblabel++;
+        lbl_break = save_lbl_break;
 
-        for(E = N->enfants[0]; E != NULL; E = E->frere){
+        std::cout << ".l" << lbl_debut << std::endl;
+        for (Node* E : N->enfants) {
             gencode(E);
         }
-        std :: cout << "jmpl l1_" << l << std::endl;
-        std :: cout << ".l2_" << l << std::endl;
+        lbl_continue = save_lbl_continue;
+        lbl_break = save_lbl_break;
+        std::cout << "jump .l" << lbl_debut << std::endl;
+        std::cout << ".l" << lbl_break << std::endl;
         break;
     case nd_if:
         iflabel ++;
@@ -732,6 +875,37 @@ void gencode(Node *N){
             gencode(N->enfants[2]);
             std :: cout << ".l2_" << iflabel << std::endl;
         }
+        break;
+    case nd_fonc:
+        std::cout << '.' << N->valeur << std::endl;
+        std::cout << "resn " << N->nbVar << std::endl;
+        gencode(N->enfants[N->nEnfants - 1]);
+        std::cout << "push 0" << std::endl;
+        std::cout << "ret" << std::endl;
+        break;
+    case nd_appel:
+        if (N->enfants[0]->type != nd_ref) {
+                throw std::runtime_error("Undefined function: " + N->valeur);
+            } else if (chercher(N->enfants[0]->valeur)->type_ != "type_fonc") {
+                throw std::runtime_error("Not a function: " + N->valeur);
+            }
+            std::cout << "prep " << N->valeur << std::endl;
+            for (size_t i = 1; i < N->enfants.size(); ++i) {
+                gencode(N->enfants[i]);
+            }
+            std::cout << "call " << (N->enfants.size() - 1) << std::endl;
+            break;
+	case nd_ref : 
+		std :: cout << " get" << N -> position << std::endl;
+		return ;
+	case nd_affect :
+		gencode(N -> enfants[1]);
+		std :: cout << "dup" << std :: endl;
+		std ::cout << "set" << N -> enfants[0] -> position << std :: endl;
+		return ;
+    case nd_ind: 
+        gencode(N->enfants[0]);
+        std :: cout << "read" << std::endl;
     default:
         break;
     }
