@@ -612,6 +612,20 @@ map <string, TokenType > keywords = {
     {"send", TokenType::tok_send},
 };
 
+
+Node* Optim( Node* A) {
+	for(int i = 0; i < A -> nEnfants; i++) {
+		A -> enfants[i] = Optim(A-> enfants[i]);
+	}
+	switch (A -> type){
+		case nd_add:
+			if (A -> enfants[0]->type == nd_const && A-> enfants[1]->type == nd_const){
+				return creerNode(nd_const, A -> enfants[0]->valeur + A -> enfants[1]->valeur);
+			}
+			return A;
+	}
+}
+
 void analex( string fname){
     char temp = ' ';
   // Lire le fichier et attribuer le code dans la variable code -------------
@@ -975,7 +989,17 @@ int main(int argc, char *argv[]) {
         std::cerr << "Erreur : veuillez spécifier le chemin du fichier source." << std::endl;
         return 1;
     }
-    analex(argv[1]);
+    printf(". start\n");
+    for (int i = 1; i < argc; i++) {
+        analex(argv[i]);
+        while (T.type != tok_eof) {
+            Node *N = analyseursynthax();
+            AnaSem(N);
+            N = Optim(N);
+            gencode(N);
+        }
+    }
+    printf("debug\nhalt\n");
     return 0;
 }
 
