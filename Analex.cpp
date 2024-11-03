@@ -483,6 +483,7 @@ Node* I();
 Node* F();
 
 Node *E(int pmin) {
+    std::cout << "E(" << pmin << ")" << std::endl;
     Node *A1 = P();
     while (T.type != tok_eof) {
         const Operateur *op = nullptr;
@@ -507,8 +508,9 @@ Node *E() {
 }
 
 Node *A() {
+    std::cout << "A()" << std::endl;
     if (check(TokenType::tok_constante)) {
-        Node *A = creerNode(NodeType::nd_const, T.valeur);
+        Node *A = creerNode(NodeType::nd_const, L.valeur);
         return A;
     }
     else if (check(TokenType::tok_open_parenthesis)) {
@@ -517,7 +519,7 @@ Node *A() {
         return A;
     }
     else if (check(TokenType::tok_ident)) {
-        return creerNode(nd_ref, T.valeur);
+        return creerNode(nd_ref, L.valeur);
     }
     else if (check(tok_eof)) {
         return creerNode(nd_eof);
@@ -526,11 +528,12 @@ Node *A() {
         return creerNode(nd_vide);
     }
     else {
-        throw std::runtime_error("Erreur : trouvé " + T.valeur);
+        throw std::runtime_error("Erreur : trouvé " + L.valeur);
     }
 }
 
 Node *S() {
+    std::cout << "S()" << std::endl;
     Node *N = A();
     if (check(tok_open_parenthesis)) {
         N = creerNode(nd_appel, N);
@@ -553,6 +556,7 @@ Node *S() {
 }
 
 Node *P() {
+    std::cout << "P()" << std::endl;
     Node *A;
     if (check(tok_plus)) {
         A = P(); 
@@ -577,14 +581,17 @@ Node *P() {
 }
 
 Node *I() {
+    std::cout << "I()" << std::endl;
+    std::cout << "T.type : " << T.type << ", T.valeur : " << T.valeur << std::endl;
     if (check(tok_debug)) {
         Node *R = E();
         accept(tok_semicolon);
         return creerNode(nd_debug, R);
     }
-    else if (check(tok_open_bracket)) {
+    else if (check(tok_open_brace)) {
+        std::cout << "I() : open_bracket" << std::endl;
         Node *R = creerNode(nd_bloc);
-        while (!check(tok_close_bracket)) {
+        while (!check(tok_close_brace)) {
             ajouterEnfant(R, I());
         }
         return R;
@@ -677,6 +684,7 @@ Node *I() {
 }
 
 Node *F() {
+    std::cout << "F()" << std::endl;
     accept(tok_int);
     accept(tok_ident);
     Node *R = creerNode(nd_fonc, L.valeur);
