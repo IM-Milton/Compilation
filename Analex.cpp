@@ -627,6 +627,10 @@ Node* Optim( Node* A) {
 				return creerNode(nd_const, A -> enfants[0]->valeur + A -> enfants[1]->valeur);
 			}
 			return A;
+            break;
+        default:
+        return A;
+            break;
 	}
 }
 
