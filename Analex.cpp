@@ -320,31 +320,64 @@ std::vector<Operateur> operateurs = {
     {tok_logical_not, 8, 1, nd_not},
 };
 
-Node *A(){
-    if (check(TokenType :: tok_constante)){
-        Node *A = creerNode(NodeType :: nd_const, L.valeur);
-        return A;
+// Forward declarations to ensure each function is known before use.
+Node* A();
+Node* S();
+Node* P();
+Node* E(int pmin);
+Node* E();
+Node* I();
+Node* F();
+
+Node *E(int pmin) {
+    Node *A1 = P();
+    while (T.type != tok_eof) {
+        const Operateur *op = nullptr;
+        for (const auto& op_ : operateurs) {
+            if (op_.type_ == T.type) {
+                op = &op_;
+                break;
+            }
+        }
+        if (op == nullptr || op->prio < pmin) {
+            return A1;
+        }
+        next();
+        Node *A2 = E(op->prio + op->assoc);
+        A1 = creerNode(op->type_N, A1, A2);
     }
-    else if (check(TokenType :: tok_open_parenthesis)){
-        Node *A = E(0);
-        accept(TokenType :: tok_close_parenthesis);
-        return A;
-    }
-    else if (check( TokenType :: tok_ident)){
-        return creerNode(nd_ref, L.valeur);
-    }
-    else if(check(tok_eof)){
-        return creerNode(nd_eof);
-    }
-    else if(T.type == tok_semicolon){
-        return creerNode(nd_vide);
-    }
-    else{    
-        throw std::runtime_error("Erreur : trouvé " + L.valeur);
-    } 
+    return A1;
 }
 
-Node *S(){
+Node *E() {
+    return E(0);
+}
+
+Node *A() {
+    if (check(TokenType::tok_constante)) {
+        Node *A = creerNode(NodeType::nd_const, L.valeur);
+        return A;
+    }
+    else if (check(TokenType::tok_open_parenthesis)) {
+        Node *A = E(0);
+        accept(TokenType::tok_close_parenthesis);
+        return A;
+    }
+    else if (check(TokenType::tok_ident)) {
+        return creerNode(nd_ref, L.valeur);
+    }
+    else if (check(tok_eof)) {
+        return creerNode(nd_eof);
+    }
+    else if (T.type == tok_semicolon) {
+        return creerNode(nd_vide);
+    }
+    else {
+        throw std::runtime_error("Erreur : trouvé " + L.valeur);
+    }
+}
+
+Node *S() {
     Node *N = A();
     if (check(tok_open_parenthesis)) {
         N = creerNode(nd_appel, N);
@@ -363,68 +396,43 @@ Node *S(){
         Node *I = creerNode(nd_indirect, e);
         return I;
     }
-    return N;        
+    return N;
 }
 
-Node *P(){
+Node *P() {
     Node *A;
-    /*A revoir apres ajout des nouveaux champs*/
-    if (check(tok_plus)){
-        A = P(); return A;
+    if (check(tok_plus)) {
+        A = P(); 
+        return A;
     }
-    else if (check(tok_minus)){
+    else if (check(tok_minus)) {
         A = P();
-        return creerNode(nd_NdMoinsUn,A);
-    }else if(check(tok_logical_not)){
+        return creerNode(nd_NdMoinsUn, A);
+    } else if (check(tok_logical_not)) {
         A = P();
-        return creerNode(nd_not,A);
-    }else if(check(tok_bitwise_and)){
+        return creerNode(nd_not, A);
+    } else if (check(tok_bitwise_and)) {
         A = P();
-        return creerNode(nd_band,A);//A revoir
-    }else if(check(tok_multiply)){
+        return creerNode(nd_band, A);
+    } else if (check(tok_multiply)) {
         A = P();
-        return creerNode(nd_mul,A);}
-    else {
-        A = S(); return A;
+        return creerNode(nd_mul, A);
+    } else {
+        A = S();
+        return A;
     }
 }
 
-Node *E (int pmin){
-    Node *A1 = P();
-    while (T.type != tok_eof){
-        const Operateur *op = nullptr;
-        for(const auto& op_ : operateurs){
-            if (op_.type_ == T.type){
-                op = &op_;
-                break;
-            }
-        }
-        if (op == nullptr || op->prio < pmin){
-            return A1;
-        }
-        next();
-        Node *A2= E(op->prio + op->assoc);
-        A1 = creerNode(op->type_N, A1, A2);
-    }
-    return A1;
-}
-
-Node *E(){
-    return E(0);
-}
-
-
-
-Node *I(){
-    if(check(tok_debug)){
+Node *I() {
+    if (check(tok_debug)) {
         Node *R = E();
         accept(tok_semicolon);
-        return creerNode(nd_debug,R);
+        return creerNode(nd_debug, R);
     }
-    else if (check(tok_open_bracket)){
-        Node *R = creerNode (nd_bloc);
-        while(!check(tok_close_bracket)){
-            ajouterEnfant(R,I());
+    else if (check(tok_open_bracket)) {
+        Node *R = creerNode(nd_bloc);
+        while (!check(tok_close_bracket)) {
+            ajouterEnfant(R, I());
         }
         return R;
     }
@@ -434,20 +442,19 @@ Node *I(){
         accept(tok_comma);
         return R;
     }
-    else if (check(tok_if)){
+    else if (check(tok_if)) {
         accept(tok_open_parenthesis);
-        Node *expr= E();
+        Node *expr = E();
         accept(tok_close_parenthesis);
         Node *I1 = I();
         Node *R = creerNode(nd_cond, expr, I1);
 
-        if (check(tok_else)){
+        if (check(tok_else)) {
             Node *I2 = I();
             ajouterEnfant(R, I2);
         }
         return R;
-
-    }else if(check(tok_while)){
+    } else if (check(tok_while)) {
         accept(tok_open_parenthesis);
         Node *expr = E();
         accept(tok_close_parenthesis);
@@ -458,7 +465,7 @@ Node *I(){
         Node *loop = creerNode(nd_loop, ancre, R);
 
         return loop;
-    }else if(check(tok_for)){
+    } else if (check(tok_for)) {
         accept(tok_open_parenthesis);
         Node *A1 = E();
         accept(tok_semicolon);
@@ -472,7 +479,7 @@ Node *I(){
         Node *ancre = creerNode(nd_ancre);
         Node *loop = creerNode(nd_loop, ancre, R, A3);
         return creerNode(nd_bloc, A1, loop);
-    }else if(check(tok_do)){
+    } else if (check(tok_do)) {
         Node *I1 = I();
         accept(tok_while);
         accept(tok_open_parenthesis);
@@ -486,56 +493,53 @@ Node *I(){
         Node *loop = creerNode(nd_loop, ancre, R);
         return loop;
     }
-    else if(check(tok_return)){
+    else if (check(tok_return)) {
         Node *R = E();
         accept(tok_semicolon);
         return creerNode(nd_return, R);
     }
-    else if(check(tok_break)){
+    else if (check(tok_break)) {
         accept(tok_semicolon);
         return creerNode(nd_break);
     }
-    else if(check(tok_continue)){
+    else if (check(tok_continue)) {
         accept(tok_semicolon);
         return creerNode(nd_continue);
     }
-    else if(check(tok_send)){
+    else if (check(tok_send)) {
         Node *R = E();
         accept(tok_semicolon);
         return creerNode(nd_send, R);
     }
-    else if(check(tok_recv)){
+    else if (check(tok_recv)) {
         Node *R = E();
         accept(tok_semicolon);
         return creerNode(nd_recv, R);
-
     }
-    else{
-        Node *R=E();
+    else {
+        Node *R = E();
         accept(tok_comma);
         return creerNode(nd_drop, R);
     }
 }
 
-
-Node *F(){
+Node *F() {
     accept(tok_int);
     accept(tok_ident);
     Node *R = creerNode(nd_fonc, L.valeur);
     accept(tok_open_parenthesis);
-    while(check(tok_int)){
+    while (check(tok_int)) {
         accept(tok_ident);
-        ajouterEnfant(R,creerNode(nd_decl, L.valeur));
-        if(check(tok_comma)){
+        ajouterEnfant(R, creerNode(nd_decl, L.valeur));
+        if (check(tok_comma)) {
             continue;
-        }
-        else{
+        } else {
             break;
         }
     }
     accept(tok_close_parenthesis);
     Node* i = I();
-    ajouterEnfant(R,i);
+    ajouterEnfant(R, i);
     return R;
 }
 
