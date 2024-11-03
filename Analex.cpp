@@ -53,8 +53,7 @@ enum TokenType {
     tok_recv,
     tok_break,
     tok_continue,
-    tok_send,
-    tok_main
+    tok_send
 };
 
 enum NodeType {
@@ -191,7 +190,8 @@ map <string, TokenType > keywords = {
     {"while", TokenType::tok_while},
     {"return", TokenType::tok_return},
     {"int", TokenType::tok_int},
-    {"main", TokenType::tok_main},
+    {"do", TokenType::tok_do},
+    {"debug", TokenType::tok_debug},
     {"for", TokenType::tok_for},
     {"do", TokenType::tok_do},
     {"break", TokenType::tok_break},
@@ -327,6 +327,10 @@ void next(){
                 position ++;
             }
             s = text;
+
+            if(isalnum(code[position]) == false){
+                position --;
+            }
 
             /*Verification si c'est un mot clés connu*/
             bool patch = false;
@@ -504,7 +508,7 @@ Node *E() {
 
 Node *A() {
     if (check(TokenType::tok_constante)) {
-        Node *A = creerNode(NodeType::nd_const, L.valeur);
+        Node *A = creerNode(NodeType::nd_const, T.valeur);
         return A;
     }
     else if (check(TokenType::tok_open_parenthesis)) {
@@ -513,7 +517,7 @@ Node *A() {
         return A;
     }
     else if (check(TokenType::tok_ident)) {
-        return creerNode(nd_ref, L.valeur);
+        return creerNode(nd_ref, T.valeur);
     }
     else if (check(tok_eof)) {
         return creerNode(nd_eof);
@@ -522,7 +526,7 @@ Node *A() {
         return creerNode(nd_vide);
     }
     else {
-        throw std::runtime_error("Erreur : trouvé " + L.valeur);
+        throw std::runtime_error("Erreur : trouvé " + T.valeur);
     }
 }
 
@@ -1008,7 +1012,7 @@ int main(int argc, char *argv[]) {
     for (int i = 1; i < argc; i++) {
         analex(argv[i]);
         reinitialiser();
-        while (T.type == tok_eof) {
+        while (T.type != tok_eof) {
             std :: cout << "ici\n";
             Node *N = analyseursynthax();
             AnaSem(N);
