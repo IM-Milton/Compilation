@@ -185,24 +185,164 @@ struct Token {
     std::string valeur;
 };
 
+map <string, TokenType > keywords = {
+    {"if", TokenType::tok_if},
+    {"else", TokenType::tok_else},
+    {"while", TokenType::tok_while},
+    {"return", TokenType::tok_return},
+    {"int", TokenType::tok_int},
+    {"main", TokenType::tok_main},
+    {"for", TokenType::tok_for},
+    {"do", TokenType::tok_do},
+    {"break", TokenType::tok_break},
+    {"continue", TokenType::tok_continue},
+    {"recv", TokenType::tok_recv},
+    {"send", TokenType::tok_send},
+};
 
 Token T, L;
 string code = "";
 size_t ligne = 1 , position = 0;
 
 void next(){
-    if(T.type == TokenType::tok_eof){
-        position = 0;
-        return;
-    }
-    for (size_t i = position; i < code.length(); i++){
-        if( isspace(code[i])){
-            continue;
-        }
+
+    if(T.type != TokenType::tok_eof && T.type != TokenType::INCONNU){
         L = T;
         position ++;
-        break;
     }
+
+    char temp = code[position];
+        string s;
+        while(isspace(temp)){
+            position++;
+            temp = code[position];
+        }
+
+        if ( temp == '+'){
+            T.type =TokenType::tok_plus;
+            s = string(1, temp);
+        }else if (temp == '-'){
+            T.type = TokenType::tok_minus;
+            s = string(1, temp);
+        }else if (temp == '*'){
+            T.type = TokenType::tok_multiply;
+            s = string(1, temp);
+        }else if (temp == '/'){
+            T.type = TokenType::tok_divide;
+            s = string(1, temp);
+        }else if (temp == '%'){
+            T.type = TokenType::tok_modulo;
+            s = string(1, temp);
+        }else if (temp == '='){
+            if (code[position+1] == '='){
+                T.type = TokenType::tok_equal;
+                s = temp + "=";
+                position = position + 1;
+            }else{
+                T.type = TokenType::tok_assignment;
+                s = string(1, temp);
+            }
+        }else if (temp == '!'){
+            if (code[position+1] == '=')
+            {
+                T.type = TokenType :: tok_not_equal;
+                s = temp + "=";
+            }else{
+                T.type = TokenType::tok_logical_not;
+                s = string(1, temp);
+            }
+        }else if (temp == '<'){
+            if (code[position+1] == '=')
+            {
+                T.type = TokenType :: tok_less_equal;
+                s = temp + "=";
+            }else{
+                T.type = TokenType::tok_less_than;
+                s = string(1, temp);
+            }
+        }else if (temp == '>'){
+            if(code[position+1] == '='){
+                T.type = TokenType :: tok_greater_equal;
+                s = temp + "=";
+            }else{
+                T.type = TokenType::tok_greater_than;
+                s = string(1, temp);
+            }
+        }else if (temp == '&'){
+            if (code[position+1] == '&'){
+                T.type = TokenType :: tok_logical_and;
+                s = temp + "&";
+            }else{
+                T.type = TokenType::tok_bitwise_and;
+                s = string(1, temp);
+            }
+        }else if (temp == '|'){
+            if (code[position+1] == '|'){
+                T.type = TokenType :: tok_logical_or;
+                s = temp + "|";
+            }else{
+                T.type = TokenType::tok_bitwise_or;
+                s = string(1, temp);
+            }
+        }else if (temp == ','){
+            T.type = TokenType::tok_comma;
+            s = string(1, temp);
+        }else if (temp == ';'){
+            T.type = TokenType::tok_semicolon;
+            s = string(1, temp);
+        }else if (temp == '('){
+            T.type =TokenType::tok_open_parenthesis;
+            s = string(1, temp);
+        }else if (temp == ')'){
+            T.type =TokenType::tok_close_parenthesis;
+            s = string(1, temp);
+        }else if (temp == '{'){
+            T.type = TokenType::tok_open_brace;
+            s = string(1, temp);
+        }else if (temp == '}'){
+            T.type = TokenType::tok_close_brace;
+            s = string(1, temp);
+        }else if (temp == '['){
+            T.type = TokenType::tok_open_bracket;
+            s = string(1, temp);
+        }else if (temp == ']'){
+            T.type = TokenType::tok_close_bracket;
+            s = string(1, temp);
+        }
+        else if (isdigit(temp)){
+            s = string(1, temp);
+            while(position < code.length() && isdigit(code[position])){
+                s = s + code[position];
+                position++;
+            }
+            T.type = TokenType::tok_constante;
+        }else if(temp == '\0'){
+            T.type = TokenType::tok_eof;
+            s = "\0";
+        }else {
+            string text;
+            while ((position < code.length()) && isalnum(code[position]))
+            {
+                text += code[position];
+                position ++;
+            }
+            s = text;
+
+            /*Verification si c'est un mot clés connu*/
+            bool patch = false;
+            for (const auto& entry : keywords) {
+                if(text == entry.first){
+                    T.type = entry.second;
+                    patch = true;
+                }
+            }
+            
+            /*Cest un identifiant*/
+            if(patch == false ){
+                T.type = TokenType::tok_ident;
+            }  
+        }
+        T.valeur = s;
 }
 
 bool check (TokenType type){
@@ -214,6 +354,11 @@ bool check (TokenType type){
         return true;
     }
 
+}
+
+void reinitialiser() {
+    position = 0;
+    next(); // Initialise le premier token à T
 }
 
 void accept(TokenType type){
@@ -605,21 +750,6 @@ void end() {
     }
 }
 
-map <string, TokenType > keywords = {
-    {"if", TokenType::tok_if},
-    {"else", TokenType::tok_else},
-    {"while", TokenType::tok_while},
-    {"return", TokenType::tok_return},
-    {"int", TokenType::tok_int},
-    {"main", TokenType::tok_main},
-    {"for", TokenType::tok_for},
-    {"do", TokenType::tok_do},
-    {"break", TokenType::tok_break},
-    {"continue", TokenType::tok_continue},
-    {"recv", TokenType::tok_recv},
-    {"send", TokenType::tok_send},
-};
-
 
 Node* Optim( Node* A) {
 	for(int i = 0; i < A -> nEnfants; i++) {
@@ -639,147 +769,14 @@ Node* Optim( Node* A) {
 }
 
 void analex( string fname){
-    char temp = ' ';
   // Lire le fichier et attribuer le code dans la variable code -------------
     code = lireFichier(fname);
 
 
-    while (temp != '\0')
+    while (T.type != TokenType::tok_eof)
     {
-
-        temp = code[position];
-        string s;
-        if (isspace(temp)) {
-            position++;
-            continue;
-        }
-        else if ( temp == '+'){
-            T.type =TokenType::tok_plus;
-            s = string(1, temp);
-        }else if (temp == '-'){
-            T.type = TokenType::tok_minus;
-            s = string(1, temp);
-        }else if (temp == '*'){
-            T.type = TokenType::tok_multiply;
-            s = string(1, temp);
-        }else if (temp == '/'){
-            T.type = TokenType::tok_divide;
-            s = string(1, temp);
-        }else if (temp == '%'){
-            T.type = TokenType::tok_modulo;
-            s = string(1, temp);
-        }else if (temp == '='){
-            if (code[position+1] == '='){
-                T.type = TokenType::tok_equal;
-                s = temp + "=";
-                position = position + 1;
-            }else{
-                T.type = TokenType::tok_assignment;
-                s = string(1, temp);
-            }
-        }else if (temp == '!'){
-            if (code[position+1] == '=')
-            {
-                T.type = TokenType :: tok_not_equal;
-                s = temp + "=";
-            }else{
-                T.type = TokenType::tok_logical_not;
-                s = string(1, temp);
-            }
-        }else if (temp == '<'){
-            if (code[position+1] == '=')
-            {
-                T.type = TokenType :: tok_less_equal;
-                s = temp + "=";
-            }else{
-                T.type = TokenType::tok_less_than;
-                s = string(1, temp);
-            }
-        }else if (temp == '>'){
-            if(code[position+1] == '='){
-                T.type = TokenType :: tok_greater_equal;
-                s = temp + "=";
-            }else{
-                T.type = TokenType::tok_greater_than;
-                s = string(1, temp);
-            }
-        }else if (temp == '&'){
-            if (code[position+1] == '&'){
-                T.type = TokenType :: tok_logical_and;
-                s = temp + "&";
-            }else{
-                T.type = TokenType::tok_bitwise_and;
-                s = string(1, temp);
-            }
-        }else if (temp == '|'){
-            if (code[position+1] == '|'){
-                T.type = TokenType :: tok_logical_or;
-                s = temp + "|";
-            }else{
-                T.type = TokenType::tok_bitwise_or;
-                s = string(1, temp);
-            }
-        }else if (temp == ','){
-            T.type = TokenType::tok_comma;
-            s = string(1, temp);
-        }else if (temp == ';'){
-            T.type = TokenType::tok_semicolon;
-            s = string(1, temp);
-        }else if (temp == '('){
-            T.type =TokenType::tok_open_parenthesis;
-            s = string(1, temp);
-        }else if (temp == ')'){
-            T.type =TokenType::tok_close_parenthesis;
-            s = string(1, temp);
-        }else if (temp == '{'){
-            T.type = TokenType::tok_open_brace;
-            s = string(1, temp);
-        }else if (temp == '}'){
-            T.type = TokenType::tok_close_brace;
-            s = string(1, temp);
-        }else if (temp == '['){
-            T.type = TokenType::tok_open_bracket;
-            s = string(1, temp);
-        }else if (temp == ']'){
-            T.type = TokenType::tok_close_bracket;
-            s = string(1, temp);
-        }
-        else if (isdigit(temp)){
-            s = string(1, temp);
-            while(position < code.length() && isdigit(code[position])){
-                s = s + code[position];
-                position++;
-            }
-            T.type = TokenType::tok_constante;
-        }else if(temp == '\0'){
-            T.type = TokenType::tok_eof;
-            s = "\0";
-        }else {
-            string text;
-            while ((position < code.length()) && isalnum(code[position]))
-            {
-                text += code[position];
-                position ++;
-            }
-            s = text;
-
-            /*Verification si c'est un mot clés connu*/
-            bool patch = false;
-            for (const auto& entry : keywords) {
-                if(text == entry.first){
-                    T.type = entry.second;
-                    patch = true;
-                }
-            }
-            
-            /*Cest un identifiant*/
-            if(patch == false ){
-                T.type = TokenType::tok_ident;
-            }  
-        }
-        T.valeur = s;
-        std :: cout << " le type : " << T.type << ", Valeur : " << T.valeur << ", Ligne : " << T.ligne << std::endl;
         next();
+        cout << " le type : " << T.type << ", Valeur : " << T.valeur << ", Ligne : " << T.ligne << std::endl;
     }
     
 }
@@ -1010,8 +1007,7 @@ int main(int argc, char *argv[]) {
     printf(". start\n");
     for (int i = 1; i < argc; i++) {
         analex(argv[i]);
-        next();
-        std :: cout << "T.type : " << T.type << std::endl;
+        reinitialiser();
         while (T.type == tok_eof) {
             std :: cout << "ici\n";
             Node *N = analyseursynthax();
