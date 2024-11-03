@@ -310,11 +310,11 @@ void next(){
             s = string(1, temp);
         }
         else if (isdigit(temp)){
-            s = string(1, temp);
             while(position < code.length() && isdigit(code[position])){
                 s = s + code[position];
                 position++;
             }
+
             T.type = TokenType::tok_constante;
         }else if(temp == '\0'){
             T.type = TokenType::tok_eof;
