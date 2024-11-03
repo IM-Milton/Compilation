@@ -101,7 +101,6 @@ enum NodeType {
     nd_break,
     nd_continue,
     nd_send,
-    nd_main,
     nd_cond,   // Added nd_cond
     nd_vide,   // Added nd_vide
     nd_affect, // Added nd_affect
@@ -161,9 +160,7 @@ std::map<NodeType, std::string> Tables = {
     {nd_recv, "nd_recv"},
     {nd_break, "nd_break"},
     {nd_continue, "nd_continue"},
-    {nd_main, "nd_main"},
     {nd_fonc, "nd_fonc"}, // Added nd_fonc to the map,
-    {nd_main, "nd_main"}
 }; 
 
 std::string lireFichier(const std::string& cheminFichier) {
@@ -484,6 +481,7 @@ Node* F();
 
 Node *E(int pmin) {
     std::cout << "E(" << pmin << ")" << std::endl;
+    std::cout << "T.type : " << T.type << ", T.valeur : " << T.valeur << std::endl;
     Node *A1 = P();
     while (T.type != tok_eof) {
         const Operateur *op = nullptr;
@@ -500,6 +498,7 @@ Node *E(int pmin) {
         Node *A2 = E(op->prio + op->assoc);
         A1 = creerNode(op->type_N, A1, A2);
     }
+    std::cout << "T.type : " << T.type << ", T.valeur : " << T.valeur << std::endl;
     return A1;
 }
 
@@ -508,7 +507,7 @@ Node *E() {
 }
 
 Node *A() {
-    std::cout << "A()" << std::endl;
+    std::cout << "A()" << std::endl;   
     if (check(TokenType::tok_constante)) {
         Node *A = creerNode(NodeType::nd_const, L.valeur);
         return A;
@@ -528,7 +527,7 @@ Node *A() {
         return creerNode(nd_vide);
     }
     else {
-        throw std::runtime_error("Erreur : trouvé " + L.valeur);
+        throw std::runtime_error("Erreur : trouvé " + T.valeur);
     }
 }
 
@@ -547,6 +546,7 @@ Node *S() {
         }
         return N;
     } else if (check(tok_open_bracket)) {
+        std::cout << "T.type : " << T.type << ", T.valeur : " << T.valeur << std::endl;
         Node *e = E(0);
         accept(tok_close_bracket);
         Node *I = creerNode(nd_indirect, e);
@@ -558,6 +558,7 @@ Node *S() {
 Node *P() {
     std::cout << "P()" << std::endl;
     Node *A;
+    std::cout << "T.type : " << T.type << ", T.valeur : " << T.valeur << std::endl;
     if (check(tok_plus)) {
         A = P(); 
         return A;
@@ -582,7 +583,6 @@ Node *P() {
 
 Node *I() {
     std::cout << "I()" << std::endl;
-    std::cout << "T.type : " << T.type << ", T.valeur : " << T.valeur << std::endl;
     if (check(tok_debug)) {
         Node *R = E();
         accept(tok_semicolon);
@@ -598,7 +598,6 @@ Node *I() {
     else if (check(tok_int)) {
         accept(tok_ident);
         Node *R = creerNode(nd_decl, L.valeur);
-        std::cout << "T.type : " << T.type << ", T.valeur : " << T.valeur << std::endl;
         accept(tok_semicolon);
         return R;
     }
@@ -713,13 +712,13 @@ Node* analyseursynthax(){
 }
 
 
-class Symbol {
-public:
+struct Symbol {
     std::string nom;
     std::string type_;
     int position;
     int nbVar;
 
+    // Constructeur
     Symbol(const std::string& nom) : nom(nom), type_(""), position(0), nbVar(0) {}
 };
 
@@ -941,72 +940,66 @@ void gencode(Node *N){
 }
 
 void AnaSem(Node *N) {
-    Symbol* S = nullptr;
 
-    switch(N->type) {
-        default:
-            for(auto i = 0; i < N->nEnfants; i++) {
-                AnaSem(N->enfants[i]);
-                throw std::runtime_error("Semantic error: invalid reference type.");}
-            break;
-        case nd_affect:
-            if(N->enfants[0]->type != nd_ref && N->enfants[0]->type != nd_ind) {
-                erreurfatale("...");
-            }
-            for(auto i = 0; i < N->nEnfants; i++) {
-                AnaSem(N->enfants[i]);
-            }
-            break;
-        case nd_decl:
-            S = declare(N->valeur);
-            S->type_ = "type_int";
-            S->position = nbVar; 
-            nbVar++;
-            break;
-        case nd_ref:
-             S = chercher(N->valeur);
-            if(S->type_ != "type_int") {
-                erreurfatale("...");
-            }
-            N->position = S->position;
-            break;
-        case nd_bloc:
-            begin();
-            for(auto i = 0; i < N->nEnfants; i++) {
-                AnaSem(N->enfants[i]);
-            }
-            end();
-            break;
-        case nd_appel:
-            if (N->enfants[0]-> type != nd_ref) {
-                erreurfatale(" ");
-            }
-            S = chercher(N->enfants[0]->valeur);
-            if (S->type_ != "type_fonc") {
-                erreurfatale("");
-            }
-            for(auto i = 1; i < N->nEnfants; i++) {
-                AnaSem(N->enfants[i]);
-            }
-            break;
-        case nd_fonc:
-            S = declare(N->valeur);
-            S->type_ = "type_fonc";
-            begin();
-            nbVar = 0;
-            for (auto i = 0; i < N->nEnfants; i++) {
-                AnaSem(N->enfants[i]);
-            }
-            end();
-            N->nbVar = nbVar - (N->nEnfants - 1);
-            break;
-        case nd_adr:
-            if(N -> enfants[0]->type != nd_ref)
-		        erreurfatale(" ");
-	        else {
-		        return AnaSem(N-> enfants[0]);
-	        }
-            break;
+    std::cout << "Node type: " << N->type << ", valeur: " << N->valeur << ", nombre d'enfants: " << N->nEnfants << std::endl;
+    if (N->type == nd_affect) {
+        if (N->enfants[0]->type != nd_ref && N->enfants[0]->type != nd_ind) {
+            erreurfatale("...");
+        }
+        for (auto i = 0; i < N->nEnfants; i++) {
+            AnaSem(N->enfants[i]);
+        }
+    } else if (N->type == nd_decl) {
+        Symbol* S = declare(N->valeur);
+        S->type_ = "type_int";
+        S->position = nbVar;
+        nbVar++;
+    } else if (N->type == nd_ref) {
+        Symbol* S = chercher(N->valeur);
+        if (S->type_ != "type_int") {
+            erreurfatale("...");
+        }
+        N->position = S->position;
+    } else if (N->type == nd_bloc) {
+        begin();
+        for (auto i = 0; i < N->nEnfants; i++) {
+            AnaSem(N->enfants[i]);
+        }
+        end();
+    } else if (N->type == nd_appel) {
+        if (N->enfants[0]->type != nd_ref) {
+            erreurfatale(" ");
+        }
+        Symbol* S = chercher(N->enfants[0]->valeur);
+        if (S->type_ != "type_fonc") {
+            erreurfatale(" ..... ");
+        }
+        for (auto i = 1; i < N->nEnfants; i++) {
+            AnaSem(N->enfants[i]);
+        }
+    } else if (N->type == nd_fonc) {
+        
+        Symbol* S = declare(N->valeur);
+        std::cout << "ici"<< std::endl;
+        S->type_ = "type_fonc";
+        begin();
+        nbVar = 0;
+        for (auto i = 0; i < N->nEnfants; i++) {
+            AnaSem(N->enfants[i]);
+        }
+        end();
+        N->nbVar = nbVar - (N->nEnfants - 1);
+    } else if (N->type == nd_adr) {
+        if (N->enfants[0]->type != nd_ref) {
+            erreurfatale(" ");
+        } else {
+            AnaSem(N->enfants[0]);
+        }
+    } else {
+        for (auto i = 0; i < N->nEnfants; i++) {
+            AnaSem(N->enfants[i]);
+        }
+        throw std::runtime_error("Semantic error: invalid reference type.");
     }
 }
 
@@ -1021,8 +1014,8 @@ int main(int argc, char *argv[]) {
         analex(argv[i]);
         reinitialiser();
         while (T.type != tok_eof) {
-            std :: cout << "ici\n";
             Node *N = analyseursynthax();
+            std :: cout << "ici\n";
             AnaSem(N);
             N = Optim(N);
             gencode(N);
