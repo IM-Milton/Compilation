@@ -191,6 +191,10 @@ string code = "";
 size_t ligne = 1 , position = 0;
 
 void next(){
+    if(T.type == TokenType::tok_eof){
+        position = 0;
+        return;
+    }
     for (size_t i = position; i < code.length(); i++){
         if( isspace(code[i])){
             continue;
@@ -1007,11 +1011,14 @@ int main(int argc, char *argv[]) {
     for (int i = 1; i < argc; i++) {
         analex(argv[i]);
         next();
-        while (T.type != tok_eof) {
+        std :: cout << "T.type : " << T.type << std::endl;
+        while (T.type == tok_eof) {
+            std :: cout << "ici\n";
             Node *N = analyseursynthax();
             AnaSem(N);
             N = Optim(N);
             gencode(N);
+            next();
         }
     }
     printf("debug\nhalt\n");
