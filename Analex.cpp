@@ -589,7 +589,6 @@ Node *I() {
         return creerNode(nd_debug, R);
     }
     else if (check(tok_open_brace)) {
-        std::cout << "I() : open_bracket" << std::endl;
         Node *R = creerNode(nd_bloc);
         while (!check(tok_close_brace)) {
             ajouterEnfant(R, I());
@@ -599,7 +598,8 @@ Node *I() {
     else if (check(tok_int)) {
         accept(tok_ident);
         Node *R = creerNode(nd_decl, L.valeur);
-        accept(tok_comma);
+        std::cout << "T.type : " << T.type << ", T.valeur : " << T.valeur << std::endl;
+        accept(tok_semicolon);
         return R;
     }
     else if (check(tok_if)) {
@@ -678,7 +678,7 @@ Node *I() {
     }
     else {
         Node *R = E();
-        accept(tok_comma);
+        accept(tok_semicolon);
         return creerNode(nd_drop, R);
     }
 }
