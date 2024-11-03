@@ -639,11 +639,17 @@ void analex( string fname){
   // Lire le fichier et attribuer le code dans la variable code -------------
     code = lireFichier(fname);
 
+
     while (temp != '\0')
     {
+
         temp = code[position];
         string s;
-        if ( temp == '+'){
+        if (isspace(temp)) {
+            position++;
+            continue;
+        }
+        else if ( temp == '+'){
             T.type =TokenType::tok_plus;
             s = string(1, temp);
         }else if (temp == '-'){
@@ -746,7 +752,7 @@ void analex( string fname){
             s = "\0";
         }else {
             string text;
-            while (position < code.length() && isalnum(code[position]))
+            while ((position < code.length()) && isalnum(code[position]))
             {
                 text += code[position];
                 position ++;
@@ -1000,6 +1006,7 @@ int main(int argc, char *argv[]) {
     printf(". start\n");
     for (int i = 1; i < argc; i++) {
         analex(argv[i]);
+        next();
         while (T.type != tok_eof) {
             Node *N = analyseursynthax();
             AnaSem(N);
