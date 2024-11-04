@@ -523,7 +523,7 @@ Node *A() {
     else if (check(tok_eof)) {
         return creerNode(nd_eof);
     }
-    else if (T.type == tok_semicolon) {
+    else if (check(tok_semicolon)) {
         return creerNode(nd_vide);
     }
     else {
